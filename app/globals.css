@@ -1,0 +1,201 @@
+/* Base reset */
+* { margin: 0; padding: 0; box-sizing: border-box; }
+html, body { background: #F5F3ED; color: #14161A; }
+a { color: inherit; text-decoration: none; }
+input, textarea, select, button { font: inherit; color: inherit; }
+
+/* ===== Original Natural Glow global styles (ported from the single-file design) ===== */
+/* cyrillic-ext */
+
+/* cyrillic */
+
+/* greek */
+
+/* vietnamese */
+
+/* latin-ext */
+
+/* latin */
+
+/* cyrillic-ext */
+
+/* cyrillic */
+
+/* greek */
+
+/* vietnamese */
+
+/* latin-ext */
+
+/* latin */
+
+/* cyrillic-ext */
+
+/* cyrillic */
+
+/* greek */
+
+/* vietnamese */
+
+/* latin-ext */
+
+/* latin */
+
+/* cyrillic-ext */
+
+/* cyrillic */
+
+/* greek */
+
+/* vietnamese */
+
+/* latin-ext */
+
+/* latin */
+
+/* cyrillic-ext */
+
+/* cyrillic */
+
+/* greek */
+
+/* vietnamese */
+
+/* latin-ext */
+
+/* latin */
+
+/* vietnamese */
+
+/* latin-ext */
+
+/* latin */
+
+/* vietnamese */
+
+/* latin-ext */
+
+/* latin */
+
+/* cyrillic-ext */
+
+/* cyrillic */
+
+/* vietnamese */
+
+/* latin-ext */
+
+/* latin */
+
+/* cyrillic-ext */
+
+/* cyrillic */
+
+/* vietnamese */
+
+/* latin-ext */
+
+/* latin */
+
+/* cyrillic-ext */
+
+/* cyrillic */
+
+/* vietnamese */
+
+/* latin-ext */
+
+/* latin */
+
+/* cyrillic-ext */
+
+/* cyrillic */
+
+/* vietnamese */
+
+/* latin-ext */
+
+/* latin */
+
+/* cyrillic-ext */
+
+/* cyrillic */
+
+/* vietnamese */
+
+/* latin-ext */
+
+/* latin */
+
+/* cyrillic-ext */
+
+/* cyrillic */
+
+/* vietnamese */
+
+/* latin-ext */
+
+/* latin */
+
+
+
+
+html,body{margin:0}
+*{box-sizing:border-box}
+body{background:#EFECE4;font-family:'Manrope',system-ui,sans-serif;-webkit-font-smoothing:antialiased;color:#14161A;text-rendering:optimizeLegibility}
+input,textarea,button,select{font-family:inherit}
+input:focus,textarea:focus{outline:none;border-color:#96702E !important}
+::placeholder{color:#9BA1A8}
+::selection{background:rgba(201,161,94,.35)}
+@keyframes ngRise{from{transform:translateY(14px)}}
+@keyframes ngFade{from{opacity:0}}
+@keyframes ngPop{from{opacity:0;transform:translateY(16px) scale(.97)}}
+@keyframes ngStamp{from{opacity:0;transform:scale(.55) rotate(-8deg)}}
+@keyframes ngToast{from{opacity:0;transform:translate(-50%,14px)}}
+@keyframes ngFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-7px)}}
+@keyframes ngShadow{0%,100%{transform:scaleX(1);opacity:.5}50%{transform:scaleX(.9);opacity:.35}}
+@keyframes ngMenuFade{from{opacity:0}}
+@keyframes ngMenuSheet{from{opacity:0;transform:translateY(-10px)}}
+@keyframes ngSheetUp{from{transform:translateY(100%)}}
+.ng-auth{display:grid;grid-template-columns:1.05fr .95fr;min-height:100vh}
+.ng-auth-mobilelogo{display:none}
+.ng-hamburger{display:none}
+@media (max-width:760px){
+  .ng-auth{grid-template-columns:1fr}.ng-auth-brand{display:none}.ng-auth-mobilelogo{display:flex}
+  .ng-navlinks{display:none !important}
+  .ng-navcart{display:none !important}
+  .ng-hamburger{display:block !important}
+  .ng-cartwrap{align-items:flex-end !important;padding:0 !important}
+  .ng-cartsheet{width:100% !important;max-width:480px !important;border:0 !important;border-radius:24px 24px 0 0 !important;max-height:82vh !important;box-shadow:0 -20px 50px rgba(20,22,26,.3) !important;animation:ngSheetUp .3s cubic-bezier(.2,.9,.3,1) !important}
+  .ng-draghandle{display:block !important}
+  .ng-headrow{gap:12px !important}
+  .ng-hero{grid-template-columns:1fr !important}
+  .ng-hero-copy{padding:5vh 0 1vh !important}
+  .ng-hero-img{min-height:288px !important;margin:0 0 5vh !important}
+  .ng-ctarow{flex-wrap:wrap !important;gap:14px !important}
+  .ng-grid3{grid-template-columns:1fr !important}
+  .ng-chips{flex-wrap:wrap !important}
+  .ng-product{grid-template-columns:1fr !important;gap:30px !important}
+  .ng-product-img{min-height:330px !important}
+  .ng-2col{grid-template-columns:1fr !important;gap:34px !important}
+  .ng-footer{grid-template-columns:1fr 1fr !important;gap:26px 24px !important}
+  .ng-footer-brand{grid-column:1 / -1 !important}
+  .ng-dash{grid-template-columns:1fr !important}
+  .ng-dash-side{display:none !important}
+  .ng-dash-mtop{display:block !important}
+  .ng-contentcart{display:none !important}
+  .ng-auth-panel{justify-content:flex-start !important;padding:24px 22px 34px !important}
+  .ng-auth-form{width:100% !important}
+  .ng-forgot{display:block !important}
+  .ng-orders-desk{display:none !important}
+  .ng-orders-mobile{display:block !important}
+  .ng-dashpad{padding:26px 20px !important}
+  .ng-dash-stats{grid-template-columns:repeat(2,1fr) !important;gap:10px !important}
+  .ng-dashrow{flex-wrap:wrap !important;gap:10px 14px !important}
+  .ng-dashrow-badge{display:none !important}
+  .ng-dashrow-main{flex:1 1 100% !important}
+  .ng-dashrow-add{margin-left:auto !important}
+  .ng-ordergrid{grid-template-columns:1fr !important;gap:16px !important}
+  .ng-invscroll{overflow-x:auto !important;-webkit-overflow-scrolling:touch}
+  .ng-invrow{min-width:540px !important}
+}

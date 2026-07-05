@@ -1,59 +1,58 @@
-# Natural Glow — Next.js
+# Natural Glow — Direction 1
 
-Deploy-ready Next.js 14 (App Router) wrapper around the Natural Glow storefront +
-customer/admin dashboard. The full experience ships as one self-contained,
-offline-capable document at `public/natural-glow.html` (fonts, images, and the
-UI runtime are all inlined) and is mounted full-viewport by `app/page.js`.
+Client demo: research-peptide storefront + laboratory portal, in the original
+"Direction 1" design (Spectral serif · Space Mono · cream/ink/gold), rebuilt as
+a Next.js 15 App Router app. Fully static export — no backend; all state is
+simulated in `localStorage`.
 
-## Run locally
+## Run
 
 ```bash
 npm install
 npm run dev      # http://localhost:3000
 ```
 
-## Build & start (production)
-
-```bash
-npm run build
-npm run start
-```
+Build for production with `npm run build` (static export to `out/`).
 
 ## Deploy
 
-**Vercel (recommended)**
 ```bash
-npm i -g vercel
-vercel            # first run links/creates the project
-vercel --prod     # ship to production
-```
-Or push this folder to a Git repo and "Import Project" at vercel.com — it
-auto-detects Next.js, no settings needed.
-
-**Netlify / Node host** — `npm run build` then `npm run start`, or use the
-official `@netlify/plugin-nextjs`.
-
-## Project structure
-
-```
-natural-glow-next/
-├─ app/
-│  ├─ layout.js      # <html>/<body> shell + metadata
-│  └─ page.js        # mounts the storefront full-viewport
-├─ public/
-│  └─ natural-glow.html   # the entire site, self-contained (~2 MB)
-├─ next.config.mjs
-├─ jsconfig.json
-└─ package.json
+npm run build && netlify deploy --prod --dir out
 ```
 
-## Editing the site
+The folder is linked to the `natural-glow-1` Netlify site.
 
-The site markup/logic lives in the source design file
-(`Natural Glow - Site v2.dc.html`), not in this folder. To update the deployed
-app, re-export the standalone build and replace `public/natural-glow.html`.
+## Routes
 
-For a full component-level port — real App Router routes (`/catalog`,
-`/dashboard`, `/orders/[id]`), server components, and an API layer for orders
-and inventory — start from the Claude Code handoff package instead of this
-wrapper.
+- `/` — marketing home (hero, featured compounds) behind the RUO age gate
+- `/catalog` — full catalog with category filters
+- `/product?id=<id>` — product detail + spec table
+- `/verify?lot=<lot>` — Certificate of Analysis lookup (printable)
+- `/science`, `/contact` — methods + contact form (simulated)
+- `/signin` — sign in / sign up (simulated; captures Name + Email)
+- `/dashboard` — the portal: Customer (catalog, cart + 3-step bank-transfer
+  checkout with proof of payment, my orders, order detail, account) and Admin
+  (orders with one-click Mark shipped / cancel-with-reason, inventory with
+  exact-stock + lot editing, new peptide)
+
+## Order lifecycle
+
+`Processing` (immediately on submit) → `Shipped` (one admin click), or
+`Cancelled` with a reason + optional message shown to the customer
+(cancel restocks inventory).
+
+## Structure
+
+- `lib/store.js` — single data layer: products, COA release dates, RUO gate,
+  simulated account, cart, inventory, orders (localStorage + CustomEvents,
+  SSR-safe hooks)
+- `components/Gate.jsx` — the RUO age gate (persists via `ng_ruo_gate`)
+- `components/portal/` — the dashboard (sidebar, views, modals, checkout)
+- `reference/` — the original single-file design source this port was built
+  from (not deployed)
+
+## Sibling
+
+"Direction 2" (Editorial / Deep Sage) lives in `natural-glow-next 2` /
+[natural-glow-2](https://github.com/c-dd/natural-glow-2) — same features,
+different design direction.
