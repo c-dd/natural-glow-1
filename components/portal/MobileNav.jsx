@@ -18,17 +18,17 @@ export default function MobileNav() {
     <div className="ng-dash-mtop" style={{ display: 'none' }}>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: '#9EAF8B', padding: '12px 16px' }}>
         <div onClick={v.goHome} style={{ display: 'flex', alignItems: 'center', gap: 7, cursor: 'pointer' }}>
-          <img src="/ng-mark.png" alt="Natural Glow" style={{ width: 92, height: 'auto', display: 'block' }} />
-          <span style={{ font: "500 6.5px 'Space Mono',monospace", letterSpacing: '.1em', color: '#5A6B4B', border: '1px solid rgba(185,111,116,.5)', padding: '2px 4px', borderRadius: 3 }}>RUO</span>
+          <img src="/ng-mark-dark.png" alt="Natural Glow" style={{ width: 92, height: 'auto', display: 'block' }} />
+          <span style={{ font: "500 6.5px 'Space Mono',monospace", letterSpacing: '.1em', color: 'rgba(255,255,255,.75)', border: '1px solid rgba(255,255,255,.5)', padding: '2px 4px', borderRadius: 3 }}>RUO</span>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
-          <div style={{ display: 'flex', background: 'rgba(45,53,39,.08)', border: '1px solid rgba(45,53,39,.12)', borderRadius: 999, padding: 2 }}>
-            <span onClick={v.setCustomer} style={{ font: "600 9.5px 'Manrope',sans-serif", padding: '5px 10px', borderRadius: 999, cursor: 'pointer', background: customer ? '#FFDFE0' : 'transparent', color: customer ? '#2E3627' : '#4A5540' }}>Customer</span>
-            <span onClick={v.setAdmin} style={{ font: "600 9.5px 'Manrope',sans-serif", padding: '5px 10px', borderRadius: 999, cursor: 'pointer', background: customer ? 'transparent' : '#FFDFE0', color: customer ? '#4A5540' : '#2E3627' }}>Admin</span>
+          <div style={{ display: 'flex', background: 'rgba(255,255,255,.14)', border: '1px solid rgba(255,255,255,.18)', borderRadius: 999, padding: 2 }}>
+            <span onClick={v.setCustomer} style={{ font: "600 9.5px 'Manrope',sans-serif", padding: '5px 10px', borderRadius: 999, cursor: 'pointer', background: customer ? '#FFDFE0' : 'transparent', color: customer ? '#2E3627' : 'rgba(255,255,255,.75)' }}>Customer</span>
+            <span onClick={v.setAdmin} style={{ font: "600 9.5px 'Manrope',sans-serif", padding: '5px 10px', borderRadius: 999, cursor: 'pointer', background: customer ? 'transparent' : '#FFDFE0', color: customer ? 'rgba(255,255,255,.75)' : '#2E3627' }}>Admin</span>
           </div>
           {customer && (
             <span onClick={v.openCart} style={{ position: 'relative', display: 'grid', placeItems: 'center', width: 34, height: 34, cursor: 'pointer' }}>
-              <Cart s={17} c="#2E3627" w={1.7} />
+              <Cart s={17} c="#FFFFFF" w={1.7} />
               {v.cartHasItems && (
                 <span style={{ position: 'absolute', top: -4, right: -4, minWidth: 16, height: 16, padding: '0 4px', display: 'grid', placeItems: 'center', background: '#FFDFE0', color: '#B96F74', font: "700 9px 'Space Mono',monospace", borderRadius: 999 }}>{v.cartCount}</span>
               )}

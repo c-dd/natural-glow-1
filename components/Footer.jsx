@@ -13,33 +13,33 @@ export default function Footer() {
 
   return (
     <>
-      <Box as="div" style="background:#9EAF8B;color:#4A5540;padding:6vh 5vw 4vh">
+      <Box as="div" style="background:#9EAF8B;color:#FFFFFF;padding:6vh 5vw 4vh">
         <Box as="div" className="ng-footer" style="max-width:900px;margin:0 auto;display:grid;grid-template-columns:1.4fr 1fr 1fr 1fr;gap:32px">
           <Box as="div" className="ng-footer-brand">
             <Box as="div" style="display:flex;align-items:center;gap:9px">
-              <img src="/ng-mark.png" alt="Natural Glow" style={{ width: 125, height: 'auto', display: 'block' }} />
-              <Box as="span" style="font:500 8px 'Space Mono',monospace;letter-spacing:.1em;color:#5A6B4B;border:1px solid rgba(185,111,116,.5);padding:2px 5px;border-radius:3px">RUO</Box>
+              <img src="/ng-mark-dark.png" alt="Natural Glow" style={{ width: 125, height: 'auto', display: 'block' }} />
+              <Box as="span" style="font:500 8px 'Space Mono',monospace;letter-spacing:.1em;color:rgba(255,255,255,.75);border:1px solid rgba(255,255,255,.5);padding:2px 5px;border-radius:3px">RUO</Box>
             </Box>
-            <Box as="p" style="margin:16px 0 0;max-width:280px;font:400 12px/1.7 'Manrope',sans-serif;color:#6E7A64">High-quality, research-grade peptides. Every lot verifiable by Certificate of Analysis.</Box>
+            <Box as="p" style="margin:16px 0 0;max-width:280px;font:400 12px/1.7 'Manrope',sans-serif;color:rgba(255,255,255,.75)">High-quality, research-grade peptides. Every lot verifiable by Certificate of Analysis.</Box>
           </Box>
           <Box as="div">
-            <Box as="div" style="font:500 9px 'Space Mono',monospace;letter-spacing:.16em;text-transform:uppercase;color:#78826B;margin-bottom:14px">Catalog</Box>
-            <Box as="div" onClick={() => router.push('/catalog')} style="font:500 12px 'Manrope',sans-serif;color:#4A5540;margin-bottom:9px;cursor:pointer;transition:color .2s ease" hover="color:#2E3627">All compounds</Box>
-            <Box as="div" onClick={() => router.push('/verify')} style="font:500 12px 'Manrope',sans-serif;color:#4A5540;margin-bottom:9px;cursor:pointer;transition:color .2s ease" hover="color:#2E3627">Verify a COA</Box>
-            <Box as="div" onClick={() => router.push('/science')} style="font:500 12px 'Manrope',sans-serif;color:#4A5540;cursor:pointer;transition:color .2s ease" hover="color:#2E3627">Science &amp; methods</Box>
+            <Box as="div" style="font:500 9px 'Space Mono',monospace;letter-spacing:.16em;text-transform:uppercase;color:rgba(255,255,255,.6);margin-bottom:14px">Catalog</Box>
+            <Box as="div" onClick={() => router.push('/catalog')} style="font:500 12px 'Manrope',sans-serif;color:rgba(255,255,255,.75);margin-bottom:9px;cursor:pointer;transition:color .2s ease" hover="color:#FFFFFF">All compounds</Box>
+            <Box as="div" onClick={() => router.push('/verify')} style="font:500 12px 'Manrope',sans-serif;color:rgba(255,255,255,.75);margin-bottom:9px;cursor:pointer;transition:color .2s ease" hover="color:#FFFFFF">Verify a COA</Box>
+            <Box as="div" onClick={() => router.push('/science')} style="font:500 12px 'Manrope',sans-serif;color:rgba(255,255,255,.75);cursor:pointer;transition:color .2s ease" hover="color:#FFFFFF">Science &amp; methods</Box>
           </Box>
           <Box as="div">
-            <Box as="div" style="font:500 9px 'Space Mono',monospace;letter-spacing:.16em;text-transform:uppercase;color:#78826B;margin-bottom:14px">Company</Box>
-            <Box as="div" onClick={() => router.push('/contact')} style="font:500 12px 'Manrope',sans-serif;color:#4A5540;margin-bottom:9px;cursor:pointer;transition:color .2s ease" hover="color:#2E3627">Contact</Box>
-            <Box as="div" onClick={() => router.push('/signin')} style="font:500 12px 'Manrope',sans-serif;color:#4A5540;cursor:pointer;transition:color .2s ease" hover="color:#2E3627">Sign in</Box>
+            <Box as="div" style="font:500 9px 'Space Mono',monospace;letter-spacing:.16em;text-transform:uppercase;color:rgba(255,255,255,.6);margin-bottom:14px">Company</Box>
+            <Box as="div" onClick={() => router.push('/contact')} style="font:500 12px 'Manrope',sans-serif;color:rgba(255,255,255,.75);margin-bottom:9px;cursor:pointer;transition:color .2s ease" hover="color:#FFFFFF">Contact</Box>
+            <Box as="div" onClick={() => router.push('/signin')} style="font:500 12px 'Manrope',sans-serif;color:rgba(255,255,255,.75);cursor:pointer;transition:color .2s ease" hover="color:#FFFFFF">Sign in</Box>
           </Box>
           <Box as="div">
-            <Box as="div" style="font:500 9px 'Space Mono',monospace;letter-spacing:.16em;text-transform:uppercase;color:#78826B;margin-bottom:14px">Legal</Box>
-            <Box as="div" onClick={() => setLegal('terms')} style="font:500 12px 'Manrope',sans-serif;color:#4A5540;margin-bottom:9px;cursor:pointer" hover="color:#2E3627">Terms of use</Box>
-            <Box as="div" onClick={() => setLegal('privacy')} style="font:500 12px 'Manrope',sans-serif;color:#4A5540;cursor:pointer" hover="color:#2E3627">Privacy</Box>
+            <Box as="div" style="font:500 9px 'Space Mono',monospace;letter-spacing:.16em;text-transform:uppercase;color:rgba(255,255,255,.6);margin-bottom:14px">Legal</Box>
+            <Box as="div" onClick={() => setLegal('terms')} style="font:500 12px 'Manrope',sans-serif;color:rgba(255,255,255,.75);margin-bottom:9px;cursor:pointer" hover="color:#FFFFFF">Terms of use</Box>
+            <Box as="div" onClick={() => setLegal('privacy')} style="font:500 12px 'Manrope',sans-serif;color:rgba(255,255,255,.75);cursor:pointer" hover="color:#FFFFFF">Privacy</Box>
           </Box>
         </Box>
-        <Box as="div" style="max-width:900px;margin:36px auto 0;padding-top:22px;border-top:1px solid rgba(45,53,39,.09);font:400 10.5px/1.7 'Space Mono',monospace;color:#78826B">
+        <Box as="div" style="max-width:900px;margin:36px auto 0;padding-top:22px;border-top:1px solid rgba(255,255,255,.16);font:400 10.5px/1.7 'Space Mono',monospace;color:rgba(255,255,255,.6)">
           For Research Use Only. Not for human or animal consumption. These statements have not been evaluated by the FDA. Products are not intended to diagnose, treat, cure, or prevent any disease. © 2026 Natural Glow Research.
         </Box>
       </Box>
@@ -68,7 +68,7 @@ export default function Footer() {
                   <Box as="p" style="margin:0;font:400 13px/1.75 'Manrope',sans-serif;color:#4A5540">This is a demonstration storefront. No real personal data is processed and no tracking is performed.</Box>
                 </>
               )}
-              <Box as="span" onClick={() => setLegal(null)} style="display:block;text-align:center;margin-top:18px;font:600 13px 'Manrope',sans-serif;padding:13px;border-radius:999px;color:#2E3627;background:#9EAF8B;cursor:pointer;transition:all .2s ease" hover="background:#8A9E76">Close</Box>
+              <Box as="span" onClick={() => setLegal(null)} style="display:block;text-align:center;margin-top:18px;font:600 13px 'Manrope',sans-serif;padding:13px;border-radius:999px;color:#FFFFFF;background:#9EAF8B;cursor:pointer;transition:all .2s ease" hover="background:#8A9E76">Close</Box>
             </Box>
           </Box>
         </Box>

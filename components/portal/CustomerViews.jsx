@@ -253,7 +253,7 @@ export function AccountView() {
         <p style={{ margin: '14px 0 0', font: "400 10px/1.6 'Space Mono',monospace", color: '#99A18C' }}>Password fields are decorative in this demo and are never stored.</p>
       </div>
 
-      <Box as="span" onClick={v.saveAccount} style="display:block;text-align:center;font:600 13px 'Manrope',sans-serif;color:#2E3627;background:#9EAF8B;padding:15px;border-radius:999px;cursor:pointer;transition:all .2s ease" hover="background:#8A9E76;transform:translateY(-1px)">Save changes</Box>
+      <Box as="span" onClick={v.saveAccount} style="display:block;text-align:center;font:600 13px 'Manrope',sans-serif;color:#FFFFFF;background:#9EAF8B;padding:15px;border-radius:999px;cursor:pointer;transition:all .2s ease" hover="background:#8A9E76;transform:translateY(-1px)">Save changes</Box>
     </div>
   );
 }

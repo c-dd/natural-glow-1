@@ -51,8 +51,8 @@ export default function Header({ active = '' }) {
       {/* top RUO strip */}
       <Box as="div" style="padding:7px 5vw;background:#9EAF8B">
         <Box as="div" style="display:flex;justify-content:space-between;align-items:center;max-width:900px;margin:0 auto">
-          <Box as="span" style="font:500 8.5px 'Space Mono',monospace;letter-spacing:.22em;text-transform:uppercase;color:#5A6B4B">For Research Use Only</Box>
-          <Box as="span" style="font:500 8.5px 'Space Mono',monospace;letter-spacing:.22em;text-transform:uppercase;color:#6E7A64">COA on every lot</Box>
+          <Box as="span" style="font:500 8.5px 'Space Mono',monospace;letter-spacing:.22em;text-transform:uppercase;color:rgba(255,255,255,.75)">For Research Use Only</Box>
+          <Box as="span" style="font:500 8.5px 'Space Mono',monospace;letter-spacing:.22em;text-transform:uppercase;color:rgba(255,255,255,.75)">COA on every lot</Box>
         </Box>
       </Box>
 
@@ -74,10 +74,10 @@ export default function Header({ active = '' }) {
               <CartIcon />
             </Box>
             {!signedIn && (
-              <Box as="span" onClick={() => go('/signin')} style="font:600 11.5px 'Manrope',sans-serif;color:#2E3627;background:#9EAF8B;padding:11px 20px;border-radius:999px;cursor:pointer;transition:all .2s ease" hover="background:#8A9E76;transform:translateY(-1px)">Sign in</Box>
+              <Box as="span" onClick={() => go('/signin')} style="font:600 11.5px 'Manrope',sans-serif;color:#FFFFFF;background:#9EAF8B;padding:11px 20px;border-radius:999px;cursor:pointer;transition:all .2s ease" hover="background:#8A9E76;transform:translateY(-1px)">Sign in</Box>
             )}
             {signedIn && (
-              <Box as="span" onClick={() => go('/dashboard')} style="display:flex;align-items:center;gap:8px;font:600 11.5px 'Manrope',sans-serif;color:#2E3627;background:#9EAF8B;padding:7px 8px 7px 18px;border-radius:999px;cursor:pointer;transition:all .2s ease" hover="background:#8A9E76">Dashboard <Box as="span" style="display:grid;place-items:center;width:23px;height:23px;border-radius:50%;background:#FFDFE0;color:#B96F74;font:700 10px 'Manrope',sans-serif">{initials(account.name)}</Box></Box>
+              <Box as="span" onClick={() => go('/dashboard')} style="display:flex;align-items:center;gap:8px;font:600 11.5px 'Manrope',sans-serif;color:#FFFFFF;background:#9EAF8B;padding:7px 8px 7px 18px;border-radius:999px;cursor:pointer;transition:all .2s ease" hover="background:#8A9E76">Dashboard <Box as="span" style="display:grid;place-items:center;width:23px;height:23px;border-radius:50%;background:#FFDFE0;color:#B96F74;font:700 10px 'Manrope',sans-serif">{initials(account.name)}</Box></Box>
             )}
             <Box as="span" className="ng-hamburger" onClick={() => setMenuOpen((o) => !o)} style="display:none;width:22px;height:14px;position:relative;cursor:pointer;margin:0 2px">
               <Box as="span" style={hbarTop} />

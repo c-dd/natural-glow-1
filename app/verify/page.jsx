@@ -76,7 +76,7 @@ export default function VerifyPage() {
                 </Box>
                 <Box as="div" style="display:flex;gap:10px;margin:32px auto 0;max-width:520px">
                   <Box as="input" value={lotInput} onChange={(e) => setLotInput(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter') doVerify(); }} placeholder="e.g. NG-0421" style="flex:1;font:500 15px 'Space Mono',monospace;letter-spacing:.06em;color:#2E3627;background:#fff;border:1.5px solid rgba(45,53,39,.16);border-radius:11px;padding:15px 16px;text-transform:uppercase;transition:border-color .2s ease" />
-                  <Box as="span" onClick={() => doVerify()} style="font:600 13px 'Manrope',sans-serif;color:#2E3627;background:#9EAF8B;padding:15px 26px;border-radius:11px;cursor:pointer;white-space:nowrap;transition:all .2s ease" hover="background:#8A9E76">Verify</Box>
+                  <Box as="span" onClick={() => doVerify()} style="font:600 13px 'Manrope',sans-serif;color:#FFFFFF;background:#9EAF8B;padding:15px 26px;border-radius:11px;cursor:pointer;white-space:nowrap;transition:all .2s ease" hover="background:#8A9E76">Verify</Box>
                 </Box>
                 <Box as="div" style="text-align:center;margin-top:14px;font:400 11px 'Manrope',sans-serif;color:#99A18C">Try <Box as="span" onClick={() => setLotInput('NG-0421')} style="font-family:'Space Mono',monospace;color:#5A6B4B;cursor:pointer">NG-0421</Box> or <Box as="span" onClick={() => setLotInput('NG-0388')} style="font-family:'Space Mono',monospace;color:#5A6B4B;cursor:pointer">NG-0388</Box></Box>
 
@@ -89,12 +89,12 @@ export default function VerifyPage() {
 
                 {verifyFound && (
                   <Box as="div" style="margin-top:30px;background:#fff;border:1px solid rgba(45,53,39,.13);border-radius:16px;overflow:hidden;box-shadow:0 24px 56px -32px rgba(45,53,39,.45);animation:ngRise .45s cubic-bezier(.2,.7,.2,1)">
-                    <Box as="div" style="display:flex;justify-content:space-between;align-items:center;padding:16px 24px;background:#9EAF8B;color:#2E3627">
+                    <Box as="div" style="display:flex;justify-content:space-between;align-items:center;padding:16px 24px;background:#9EAF8B;color:#FFFFFF">
                       <Box as="div" style="display:flex;align-items:center;gap:10px">
                         <Box as="span" style="display:grid;place-items:center;width:24px;height:24px;border-radius:50%;background:#3E7C5B;color:#fff;font-size:12px;animation:ngStamp .5s cubic-bezier(.34,1.56,.64,1)">✓</Box>
                         <Box as="span" style="font:600 12px 'Space Mono',monospace;letter-spacing:.16em;text-transform:uppercase">Verified authentic</Box>
                       </Box>
-                      <Box as="span" style="font:500 10px 'Space Mono',monospace;letter-spacing:.1em;color:#5A6B4B">Natural Glow · RUO</Box>
+                      <Box as="span" style="font:500 10px 'Space Mono',monospace;letter-spacing:.1em;color:rgba(255,255,255,.75)">Natural Glow · RUO</Box>
                     </Box>
                     <Box as="div" style="padding:26px 28px">
                       <Box as="div" style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:12px">
@@ -119,7 +119,7 @@ export default function VerifyPage() {
                       </Box>
                       <Box as="div" style="display:flex;justify-content:space-between;align-items:center;margin-top:22px;flex-wrap:wrap;gap:12px">
                         <Box as="div" style="font:400 10.5px/1.6 'Space Mono',monospace;color:#99A18C">Analyst: {record.analyst}<br />Method: RP-HPLC / ESI-MS · Ref {record.ref}</Box>
-                        <Box as="span" onClick={() => { try { window.print(); } catch { /* noop */ } }} style="font:600 12px 'Manrope',sans-serif;color:#2E3627;background:#9EAF8B;padding:12px 22px;border-radius:999px;cursor:pointer;transition:all .2s ease" hover="background:#8A9E76">Download PDF</Box>
+                        <Box as="span" onClick={() => { try { window.print(); } catch { /* noop */ } }} style="font:600 12px 'Manrope',sans-serif;color:#FFFFFF;background:#9EAF8B;padding:12px 22px;border-radius:999px;cursor:pointer;transition:all .2s ease" hover="background:#8A9E76">Download PDF</Box>
                       </Box>
                     </Box>
                   </Box>

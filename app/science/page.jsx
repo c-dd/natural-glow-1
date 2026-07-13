@@ -39,8 +39,8 @@ export default function SciencePage() {
                     </Box>
                   ))}
                 </Box>
-                <Box as="div" style="margin-top:44px;background:#9EAF8B;color:#2E3627;border-radius:16px;padding:38px 40px;max-width:900px;margin-left:auto;margin-right:auto">
-                  <Box as="div" style="font:500 10px 'Space Mono',monospace;letter-spacing:.22em;text-transform:uppercase;color:#5A6B4B;margin-bottom:14px">Research use only</Box>
+                <Box as="div" style="margin-top:44px;background:#9EAF8B;color:#FFFFFF;border-radius:16px;padding:38px 40px;max-width:900px;margin-left:auto;margin-right:auto">
+                  <Box as="div" style="font:500 10px 'Space Mono',monospace;letter-spacing:.22em;text-transform:uppercase;color:rgba(255,255,255,.75);margin-bottom:14px">Research use only</Box>
                   <Box as="h2" style="margin:0;font:300 26px/1.4 'Spectral',serif;max-width:680px;text-wrap:pretty">These materials are intended solely for laboratory research. They are not drugs, cosmetics, or foods, and are not intended to diagnose, treat, cure, or prevent any disease, or for human or animal consumption.</Box>
                 </Box>
               </Box>

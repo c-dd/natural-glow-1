@@ -13,7 +13,7 @@ import { useGate, writeGate, useMobile } from '@/lib/store';
 const chk = (on) =>
   'flex:none;width:19px;height:19px;border-radius:5px;display:grid;place-items:center;font-size:11px;margin-top:1px;transition:all .15s ease;' +
   (on
-    ? 'background:#9EAF8B;color:#2E3627;border:1.5px solid #2E3627;'
+    ? 'background:#9EAF8B;color:#FFFFFF;border:1.5px solid #2E3627;'
     : 'background:transparent;color:transparent;border:1.5px solid rgba(45,53,39,.35);');
 
 const ENTER_BASE =
@@ -49,8 +49,8 @@ export default function Gate({ children }) {
   const enterStyle =
     ENTER_BASE +
     (both
-      ? 'color:#2E3627;background:#9EAF8B;cursor:pointer;'
-      : 'color:rgba(45,53,39,.9);background:#9EAF8B;opacity:.4;cursor:not-allowed;');
+      ? 'color:#FFFFFF;background:#9EAF8B;cursor:pointer;'
+      : 'color:rgba(255,255,255,.9);background:#9EAF8B;opacity:.4;cursor:not-allowed;');
 
   return (
     <div style={{ position: 'relative', minHeight: '100vh', background: '#FFDFE0' }}>
@@ -93,11 +93,11 @@ export default function Gate({ children }) {
       {exitUp && (
         <Box as="div" style="position:fixed;inset:0;background:#9EAF8B;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:90;padding:24px;text-align:center;animation:ngFade .4s ease">
           <Box as="div" style="display:flex;align-items:center;gap:8px;justify-content:center;margin-bottom:28px">
-            <img src="/ng-mark.png" alt="Natural Glow" style={{ width: 125, height: 'auto', display: 'block' }} />
-            <Box as="span" style="font:500 7px 'Space Mono',monospace;letter-spacing:.1em;color:#5A6B4B;border:1px solid rgba(185,111,116,.6);padding:2px 4px;border-radius:3px">RUO</Box>
+            <img src="/ng-mark-dark.png" alt="Natural Glow" style={{ width: 125, height: 'auto', display: 'block' }} />
+            <Box as="span" style="font:500 7px 'Space Mono',monospace;letter-spacing:.1em;color:rgba(255,255,255,.75);border:1px solid rgba(255,255,255,.5);padding:2px 4px;border-radius:3px">RUO</Box>
           </Box>
-          <Box as="h2" style="margin:0;font:300 36px/1.15 'Spectral',serif;color:#2E3627">Access not granted</Box>
-          <Box as="p" style="margin:14px 0 0;max-width:400px;font:400 13px/1.7 'Manrope',sans-serif;color:#4A5540">This site is restricted to verified researchers 21 and older. You may return if your details have changed.</Box>
+          <Box as="h2" style="margin:0;font:300 36px/1.15 'Spectral',serif;color:#FFFFFF">Access not granted</Box>
+          <Box as="p" style="margin:14px 0 0;max-width:400px;font:400 13px/1.7 'Manrope',sans-serif;color:rgba(255,255,255,.75)">This site is restricted to verified researchers 21 and older. You may return if your details have changed.</Box>
           <Box as="span" onClick={backToGate} style="margin-top:28px;font:600 13px 'Manrope',sans-serif;color:#2E3627;background:#FFDFE0;padding:14px 28px;border-radius:999px;cursor:pointer;user-select:none;transition:all .2s ease" hover="transform:translateY(-1px)">Return to verification</Box>
         </Box>
       )}

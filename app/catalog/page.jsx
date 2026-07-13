@@ -12,7 +12,7 @@ import { useProducts, useAuth } from '@/lib/store';
 const chipStyle = (a) =>
   "font:500 11px 'Manrope',sans-serif;padding:8px 16px;border-radius:999px;cursor:pointer;transition:border-color .2s ease;" +
   (a
-    ? 'color:#2E3627;background:#9EAF8B;border:1px solid #2E3627;'
+    ? 'color:#FFFFFF;background:#9EAF8B;border:1px solid #2E3627;'
     : 'color:#4A5540;background:#fff;border:1px solid rgba(45,53,39,.14);');
 
 const CHIPS = [

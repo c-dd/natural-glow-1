@@ -95,7 +95,7 @@ export default function ProductPage() {
                       ))}
                     </Box>
                     <Box as="div" className="ng-ctarow" style="display:flex;align-items:center;gap:16px;margin-top:28px">
-                      <Box as="span" onClick={addToCart} style="font:600 13px 'Manrope',sans-serif;color:#2E3627;background:#9EAF8B;padding:15px 30px;border-radius:999px;cursor:pointer;transition:all .2s ease" hover="background:#8A9E76;transform:translateY(-1px)">Add to cart</Box>
+                      <Box as="span" onClick={addToCart} style="font:600 13px 'Manrope',sans-serif;color:#FFFFFF;background:#9EAF8B;padding:15px 30px;border-radius:999px;cursor:pointer;transition:all .2s ease" hover="background:#8A9E76;transform:translateY(-1px)">Add to cart</Box>
                       <Box as="span" onClick={() => router.push(`/verify?lot=${product.lot}`)} style="font:600 13px 'Manrope',sans-serif;color:#5A6B4B;cursor:pointer;border-bottom:1px solid transparent;transition:border-color .2s ease" hover="border-color:rgba(90,107,75,.5)">Verify this lot's COA →</Box>
                     </Box>
                     <Box as="p" style="margin:22px 0 0;font:400 10.5px/1.6 'Space Mono',monospace;color:#99A18C">For Research Use Only. Not a drug, cosmetic, or food. Not for human or animal consumption.</Box>

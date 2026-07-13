@@ -31,7 +31,7 @@ const stockDot = (s) => `display:inline-block;width:7px;height:7px;border-radius
 const stockLbl = (s) => (s <= 0 ? 'Out' : (s <= 20 ? 'Low' : 'In stock'));
 const stepDot = (on) => `width:11px;height:11px;border-radius:50%;background:${on ? '#3E7C5B' : '#F3CBCD'};flex:none;transition:background .3s ease;`;
 const stepLine = (on) => `flex:1;height:2px;background:${on ? '#3E7C5B' : '#F3CBCD'};transition:background .3s ease;`;
-const sideStyle = (a) => `font:600 12.5px 'Manrope',sans-serif;padding:10px 12px;border-radius:9px;cursor:pointer;transition:all .2s ease;color:${a ? '#2E3627' : '#4A5540'};background:${a ? 'rgba(45,53,39,.08)' : 'transparent'};`;
+const sideStyle = (a) => `font:600 12.5px 'Manrope',sans-serif;padding:10px 12px;border-radius:9px;cursor:pointer;transition:all .2s ease;color:${a ? '#FFFFFF' : 'rgba(255,255,255,.75)'};background:${a ? 'rgba(255,255,255,.16)' : 'transparent'};`;
 const mtabStyle = (a) => `font:600 13px 'Manrope',sans-serif;padding:14px 0 12px;cursor:pointer;transition:color .2s ease;border-bottom:2px solid ${a ? '#5A6B4B' : 'transparent'};color:${a ? '#2E3627' : '#78826B'};`;
 
 const dateObj = (iso) => { const d = new Date(iso + 'T00:00:00'); return isNaN(d) ? null : d; };
@@ -319,7 +319,7 @@ export function PortalProvider({ children }) {
       badge: p.name.replace(/[^A-Za-z0-9]/g, '').slice(0, 2).toUpperCase(), price: fmt(p.price),
       stockDotStyle: stockDot(stock), stockLabel: stockLbl(stock),
       addLabel: out ? 'Out of stock' : (inC ? 'Added · ' + inC : 'Add'),
-      addStyle: `flex:none;font:600 12px 'Manrope',sans-serif;padding:10px 20px;border-radius:999px;transition:transform .2s ease;` + (out ? `color:#99A18C;background:#FCE9EA;cursor:not-allowed;` : `color:#2E3627;background:#9EAF8B;cursor:pointer;`),
+      addStyle: `flex:none;font:600 12px 'Manrope',sans-serif;padding:10px 20px;border-radius:999px;transition:transform .2s ease;` + (out ? `color:#99A18C;background:#FCE9EA;cursor:not-allowed;` : `color:#FFFFFF;background:#9EAF8B;cursor:pointer;`),
       addItem: () => { if (stock > 0) addItem(p.id); },
       viewCoa: () => router.push(`/verify?lot=${encodeURIComponent(p.lot)}`),
     };
@@ -421,9 +421,9 @@ export function PortalProvider({ children }) {
     ? { ref: proofOrder.id, file: proofOrder.proof || 'receipt.pdf', amount: fmt(orderTotal(proofOrder)), date: longDate(proofOrder.placed), payer: proofOrder.customer, bank: 'First Coastal Bank · Wire transfer' }
     : { ref: '', file: '', amount: '', date: '', payer: '', bank: '' };
 
-  const submitOrderStyle = `display:block;text-align:center;margin-top:16px;font:600 13px 'Manrope',sans-serif;padding:14px;border-radius:999px;transition:all .2s ease;` + (proofName ? `color:#2E3627;background:#9EAF8B;cursor:pointer;` : `color:rgba(45,53,39,.9);background:#9EAF8B;opacity:.4;cursor:not-allowed;`);
-  const editSaveStyle = `display:block;text-align:center;margin-top:16px;font:600 13px 'Manrope',sans-serif;padding:14px;border-radius:999px;transition:all .2s ease;` + (editItems.length ? `color:#2E3627;background:#9EAF8B;cursor:pointer;` : `color:rgba(45,53,39,.9);background:#9EAF8B;opacity:.4;cursor:not-allowed;`);
-  const npCreateStyle = `display:block;text-align:center;margin-top:4px;font:600 13px 'Manrope',sans-serif;padding:14px;border-radius:999px;transition:all .2s ease;` + ((npName.trim() && npPrice.trim() && npLot.trim()) ? `color:#2E3627;background:#9EAF8B;cursor:pointer;` : `color:rgba(45,53,39,.9);background:#9EAF8B;opacity:.4;cursor:not-allowed;`);
+  const submitOrderStyle = `display:block;text-align:center;margin-top:16px;font:600 13px 'Manrope',sans-serif;padding:14px;border-radius:999px;transition:all .2s ease;` + (proofName ? `color:#FFFFFF;background:#9EAF8B;cursor:pointer;` : `color:rgba(255,255,255,.9);background:#9EAF8B;opacity:.4;cursor:not-allowed;`);
+  const editSaveStyle = `display:block;text-align:center;margin-top:16px;font:600 13px 'Manrope',sans-serif;padding:14px;border-radius:999px;transition:all .2s ease;` + (editItems.length ? `color:#FFFFFF;background:#9EAF8B;cursor:pointer;` : `color:rgba(255,255,255,.9);background:#9EAF8B;opacity:.4;cursor:not-allowed;`);
+  const npCreateStyle = `display:block;text-align:center;margin-top:4px;font:600 13px 'Manrope',sans-serif;padding:14px;border-radius:999px;transition:all .2s ease;` + ((npName.trim() && npPrice.trim() && npLot.trim()) ? `color:#FFFFFF;background:#9EAF8B;cursor:pointer;` : `color:rgba(255,255,255,.9);background:#9EAF8B;opacity:.4;cursor:not-allowed;`);
 
   const v = {
     // layout / nav
@@ -431,8 +431,8 @@ export function PortalProvider({ children }) {
     setCustomer, setAdmin, goCustCatalog, goCustOrders, goAdmOrders, goAdmInventory, goAccount, backToOrders,
     drawerCustCatalog, drawerCustOrders, drawerAdmOrders, drawerAdmInventory, drawerAccount,
     toggleDashNav, closeDashNav,
-    dbarTop: `position:absolute;left:0;width:22px;height:1.6px;background:#FFDFE0;border-radius:1px;transition:transform .3s ease, top .3s ease;` + (dashNav ? `top:6px;transform:rotate(45deg);` : `top:3px;`),
-    dbarBot: `position:absolute;left:0;width:22px;height:1.6px;background:#FFDFE0;border-radius:1px;transition:transform .3s ease, top .3s ease;` + (dashNav ? `top:6px;transform:rotate(-45deg);` : `top:10px;`),
+    dbarTop: `position:absolute;left:0;width:22px;height:1.6px;background:#FFFFFF;border-radius:1px;transition:transform .3s ease, top .3s ease;` + (dashNav ? `top:6px;transform:rotate(45deg);` : `top:3px;`),
+    dbarBot: `position:absolute;left:0;width:22px;height:1.6px;background:#FFFFFF;border-radius:1px;transition:transform .3s ease, top .3s ease;` + (dashNav ? `top:6px;transform:rotate(-45deg);` : `top:10px;`),
     sideCustCatalog: sideStyle(dashView === 'catalog'),
     sideCustOrders: sideStyle(dashView === 'myorders' || dashView === 'orderdetail'),
     sideAccount: sideStyle(dashView === 'account'),

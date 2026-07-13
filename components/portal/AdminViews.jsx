@@ -80,7 +80,7 @@ export function InventoryView() {
           <div style={{ font: "500 10px 'Space Mono',monospace", letterSpacing: '.22em', textTransform: 'uppercase', color: '#5A6B4B', marginBottom: 10 }}>Admin</div>
           <h1 style={{ margin: 0, font: "300 clamp(28px,3vw,40px)/1.05 'Spectral',serif" }}>Inventory</h1>
         </div>
-        <Box as="span" onClick={v.openNewPeptide} style="font:600 12.5px 'Manrope',sans-serif;color:#2E3627;background:#9EAF8B;padding:13px 24px;border-radius:999px;cursor:pointer;transition:all .2s ease" hover="background:#8A9E76;transform:translateY(-1px)">+ New peptide</Box>
+        <Box as="span" onClick={v.openNewPeptide} style="font:600 12.5px 'Manrope',sans-serif;color:#FFFFFF;background:#9EAF8B;padding:13px 24px;border-radius:999px;cursor:pointer;transition:all .2s ease" hover="background:#8A9E76;transform:translateY(-1px)">+ New peptide</Box>
       </div>
 
       <div className="ng-dash-stats" style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 16, margin: '24px 0' }}>

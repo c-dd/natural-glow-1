@@ -31,7 +31,7 @@ export default function HomePage() {
                     <Box as="h1" style="margin:0;font:300 clamp(42px,4.8vw,64px)/1.04 'Spectral',serif;letter-spacing:-.015em">High-quality,<br /><span style={{ fontStyle: 'italic' }}>research-grade</span> peptides.</Box>
                     <Box as="p" style="margin:26px 0 0;max-width:440px;font:400 15.5px/1.7 'Manrope',sans-serif;color:#4A5540;text-wrap:pretty">Lyophilized research peptides for laboratory use. HPLC- and mass-spec–verified, lot-tracked, and shipped with a Certificate of Analysis on every vial.</Box>
                     <Box as="div" className="ng-ctarow" style="display:flex;align-items:center;gap:24px;margin-top:36px">
-                      <Box as="span" onClick={() => router.push('/catalog')} style="font:600 13px 'Manrope',sans-serif;color:#2E3627;background:#9EAF8B;padding:15px 30px;border-radius:999px;cursor:pointer;transition:all .2s ease" hover="background:#8A9E76;transform:translateY(-1px)">Browse the catalog</Box>
+                      <Box as="span" onClick={() => router.push('/catalog')} style="font:600 13px 'Manrope',sans-serif;color:#FFFFFF;background:#9EAF8B;padding:15px 30px;border-radius:999px;cursor:pointer;transition:all .2s ease" hover="background:#8A9E76;transform:translateY(-1px)">Browse the catalog</Box>
                       <Box as="span" onClick={() => router.push('/verify')} style="font:600 13px 'Manrope',sans-serif;color:#5A6B4B;cursor:pointer;border-bottom:1px solid transparent;transition:border-color .2s ease" hover="border-color:rgba(90,107,75,.5)">Verify a COA →</Box>
                     </Box>
                   </Box>

@@ -55,7 +55,7 @@ export function CartPopup() {
                   ))}
                 </div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 20, paddingTop: 15, borderTop: '1px solid rgba(45,53,39,.09)', font: "600 15px 'Manrope',sans-serif" }}><span>Subtotal</span><span style={{ fontFamily: "'Space Mono',monospace" }}>{v.cartSubtotalStr}</span></div>
-                <Box as="span" onClick={v.goShipping} style="display:block;text-align:center;margin-top:18px;font:600 13px 'Manrope',sans-serif;color:#2E3627;background:#9EAF8B;padding:14px;border-radius:999px;cursor:pointer;transition:all .2s ease" hover="background:#8A9E76">Proceed to checkout</Box>
+                <Box as="span" onClick={v.goShipping} style="display:block;text-align:center;margin-top:18px;font:600 13px 'Manrope',sans-serif;color:#FFFFFF;background:#9EAF8B;padding:14px;border-radius:999px;cursor:pointer;transition:all .2s ease" hover="background:#8A9E76">Proceed to checkout</Box>
               </>
             ) : (
               <div style={{ textAlign: 'center', padding: '34px 10px' }}><div style={{ font: "600 15px 'Manrope',sans-serif", color: '#2E3627' }}>Your cart is empty</div><div style={{ font: "400 12.5px 'Manrope',sans-serif", color: '#99A18C', marginTop: 6 }}>Add compounds from the catalog to get started.</div></div>
@@ -76,7 +76,7 @@ export function CartPopup() {
               </div>
             </div>
             <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 18, paddingTop: 13, borderTop: '1px solid rgba(45,53,39,.09)', font: "600 15px 'Manrope',sans-serif" }}><span>Order total</span><span style={{ fontFamily: "'Space Mono',monospace" }}>{v.cartSubtotalStr}</span></div>
-            <Box as="span" onClick={v.goPayment} style="display:block;text-align:center;margin-top:16px;font:600 13px 'Manrope',sans-serif;color:#2E3627;background:#9EAF8B;padding:14px;border-radius:999px;cursor:pointer;transition:all .2s ease" hover="background:#8A9E76">Continue to payment</Box>
+            <Box as="span" onClick={v.goPayment} style="display:block;text-align:center;margin-top:16px;font:600 13px 'Manrope',sans-serif;color:#FFFFFF;background:#9EAF8B;padding:14px;border-radius:999px;cursor:pointer;transition:all .2s ease" hover="background:#8A9E76">Continue to payment</Box>
           </div>
         )}
 
@@ -84,8 +84,8 @@ export function CartPopup() {
           <div style={{ padding: '18px 24px 24px' }}>
             <span onClick={v.backToShipping} style={{ font: "600 11px 'Manrope',sans-serif", color: '#5A6B4B', cursor: 'pointer' }}>← Back to shipping</span>
             <div style={{ marginTop: 14, background: '#9EAF8B', borderRadius: 13, padding: '18px 22px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <span style={{ font: "500 10px 'Space Mono',monospace", letterSpacing: '.16em', textTransform: 'uppercase', color: '#5A6B4B' }}>Amount due</span>
-              <span style={{ font: "600 27px 'Spectral',serif", color: '#2E3627' }}>{v.cartSubtotalStr}</span>
+              <span style={{ font: "500 10px 'Space Mono',monospace", letterSpacing: '.16em', textTransform: 'uppercase', color: 'rgba(255,255,255,.75)' }}>Amount due</span>
+              <span style={{ font: "600 27px 'Spectral',serif", color: '#FFFFFF' }}>{v.cartSubtotalStr}</span>
             </div>
             <p style={{ margin: '16px 0 10px', font: "400 12.5px/1.65 'Manrope',sans-serif", color: '#4A5540' }}>Send payment by bank transfer using the details below, then upload your proof of payment. Orders ship once payment is verified.</p>
             <div style={{ background: '#fff', border: '1px solid rgba(45,53,39,.11)', borderRadius: 11, padding: '14px 17px' }}>
@@ -115,7 +115,7 @@ export function CartPopup() {
             <Box as="span" onClick={v.submitOrder} style={v.submitOrderStyle} hover="background:#8A9E76">Submit order</Box>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 12, padding: '9px 12px', background: 'rgba(90,107,75,.07)', border: '1px dashed rgba(90,107,75,.35)', borderRadius: 10 }}>
               <span style={{ font: "400 11px/1.5 'Manrope',sans-serif", color: '#78826B', flex: 1 }}>Demo shortcut — fills shipping + attaches a sample receipt and submits.</span>
-              <Box as="span" onClick={v.simulatePayment} style="white-space:nowrap;font:600 11px 'Manrope',sans-serif;color:#2E3627;background:#9EAF8B;padding:8px 14px;border-radius:999px;cursor:pointer;transition:all .2s ease" hover="background:#8A9E76">⚡ Simulate</Box>
+              <Box as="span" onClick={v.simulatePayment} style="white-space:nowrap;font:600 11px 'Manrope',sans-serif;color:#FFFFFF;background:#9EAF8B;padding:8px 14px;border-radius:999px;cursor:pointer;transition:all .2s ease" hover="background:#8A9E76">⚡ Simulate</Box>
             </div>
           </div>
         )}
@@ -125,7 +125,7 @@ export function CartPopup() {
             <div style={{ display: 'inline-grid', placeItems: 'center', width: 50, height: 50, borderRadius: '50%', background: '#3E7C5B', color: '#fff', fontSize: 24, marginBottom: 18, animation: 'ngStamp .5s cubic-bezier(.34,1.56,.64,1)' }}>✓</div>
             <h2 style={{ margin: 0, font: "300 28px 'Spectral',serif" }}>Order placed</h2>
             <p style={{ margin: '12px auto 0', maxWidth: 320, font: "400 13px/1.7 'Manrope',sans-serif", color: '#4A5540' }}>Order <span style={{ fontFamily: "'Space Mono',monospace", color: '#2E3627' }}>{v.lastOrderId}</span> received and is now being processed — track it under <span onClick={v.doneGoOrders} style={{ color: '#5A6B4B', cursor: 'pointer', fontWeight: 600 }}>My orders</span>.</p>
-            <Box as="span" onClick={v.closeCart} style="display:inline-block;margin-top:22px;font:600 13px 'Manrope',sans-serif;color:#2E3627;background:#9EAF8B;padding:13px 30px;border-radius:999px;cursor:pointer;transition:all .2s ease" hover="background:#8A9E76">Done</Box>
+            <Box as="span" onClick={v.closeCart} style="display:inline-block;margin-top:22px;font:600 13px 'Manrope',sans-serif;color:#FFFFFF;background:#9EAF8B;padding:13px 30px;border-radius:999px;cursor:pointer;transition:all .2s ease" hover="background:#8A9E76">Done</Box>
           </div>
         )}
       </Box>
@@ -226,7 +226,7 @@ export function NewPeptideModal() {
   const v = usePortal();
   if (!v.npOpen) return null;
   const chip = (active) => (active
-    ? "font:600 11px 'Manrope',sans-serif;color:#2E3627;background:#9EAF8B;padding:8px 15px;border-radius:999px;cursor:pointer"
+    ? "font:600 11px 'Manrope',sans-serif;color:#FFFFFF;background:#9EAF8B;padding:8px 15px;border-radius:999px;cursor:pointer"
     : "font:600 11px 'Manrope',sans-serif;color:#4A5540;background:#fff;border:1px solid rgba(45,53,39,.14);padding:8px 15px;border-radius:999px;cursor:pointer");
   return (
     <Box onClick={v.closeNp} style={OVERLAY + ';z-index:86'}>
@@ -279,7 +279,7 @@ export function EditInventoryModal() {
           <Field label="Lot / batch" value={v.editInvLot} onChange={v.onEditInvLot} placeholder="e.g. NG-0521" mono />
           <div style={{ display: 'flex', gap: 10, marginTop: 4 }}>
             <Box as="span" onClick={v.closeEditInv} style="flex:1;display:block;text-align:center;font:600 13px 'Manrope',sans-serif;padding:14px;border-radius:999px;color:#2E3627;background:#fff;border:1.5px solid rgba(45,53,39,.16);cursor:pointer;transition:all .2s ease" hover="border-color:rgba(45,53,39,.4)">Cancel</Box>
-            <Box as="span" onClick={v.saveEditInv} style="flex:1;display:block;text-align:center;font:600 13px 'Manrope',sans-serif;padding:14px;border-radius:999px;color:#2E3627;background:#9EAF8B;cursor:pointer;transition:all .2s ease" hover="background:#8A9E76">Save changes</Box>
+            <Box as="span" onClick={v.saveEditInv} style="flex:1;display:block;text-align:center;font:600 13px 'Manrope',sans-serif;padding:14px;border-radius:999px;color:#FFFFFF;background:#9EAF8B;cursor:pointer;transition:all .2s ease" hover="background:#8A9E76">Save changes</Box>
           </div>
           <p style={{ margin: 0, font: "400 10px/1.6 'Space Mono',monospace", color: '#99A18C', textAlign: 'center' }}>Set the exact on-hand quantity. The lot / COA only changes if you edit the lot field.</p>
         </div>
@@ -319,7 +319,7 @@ export function ProofModal() {
             <span style={{ font: "500 12px 'Manrope',sans-serif", color: '#2E3627' }}>{r.file}</span>
           </div>
           <p style={{ margin: '16px 0 0', font: "400 10px/1.6 'Space Mono',monospace", color: '#99A18C', textAlign: 'center' }}>Simulated document for demonstration. No live banking data is shown.</p>
-          <Box as="span" onClick={v.closeProof} style="display:block;text-align:center;margin-top:14px;font:600 13px 'Manrope',sans-serif;padding:13px;border-radius:999px;color:#2E3627;background:#9EAF8B;cursor:pointer;transition:all .2s ease" hover="background:#8A9E76">Close</Box>
+          <Box as="span" onClick={v.closeProof} style="display:block;text-align:center;margin-top:14px;font:600 13px 'Manrope',sans-serif;padding:13px;border-radius:999px;color:#FFFFFF;background:#9EAF8B;cursor:pointer;transition:all .2s ease" hover="background:#8A9E76">Close</Box>
         </div>
       </Box>
     </Box>
