@@ -5,9 +5,9 @@ import { usePortal } from './PortalContext';
 import { Cart, ChevR } from './icons';
 
 const DrawerRow = ({ label, onClick }) => (
-  <Box onClick={onClick} style="display:flex;align-items:center;justify-content:space-between;padding:13px 22px;border-bottom:1px solid rgba(20,22,26,.07);cursor:pointer" active="background:#EDE9DF">
-    <span style={{ font: "600 15px 'Manrope',sans-serif", color: '#14161A' }}>{label}</span>
-    <ChevR s={14} c="#C9A15E" w={1.6} />
+  <Box onClick={onClick} style="display:flex;align-items:center;justify-content:space-between;padding:13px 22px;border-bottom:1px solid rgba(45,53,39,.07);cursor:pointer" active="background:#FFF1F1">
+    <span style={{ font: "600 15px 'Manrope',sans-serif", color: '#2E3627' }}>{label}</span>
+    <ChevR s={14} c="#B96F74" w={1.6} />
   </Box>
 );
 
@@ -16,21 +16,21 @@ export default function MobileNav() {
   const customer = v.viewAs === 'customer';
   return (
     <div className="ng-dash-mtop" style={{ display: 'none' }}>
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: '#14161A', padding: '12px 16px' }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: '#9EAF8B', padding: '12px 16px' }}>
         <div onClick={v.goHome} style={{ display: 'flex', alignItems: 'center', gap: 7, cursor: 'pointer' }}>
-          <img src="/ng-mark-dark.png" alt="Natural Glow" style={{ width: 92, height: 'auto', display: 'block' }} />
-          <span style={{ font: "500 6.5px 'Space Mono',monospace", letterSpacing: '.1em', color: '#C9A15E', border: '1px solid rgba(201,161,94,.5)', padding: '2px 4px', borderRadius: 3 }}>RUO</span>
+          <img src="/ng-mark.png" alt="Natural Glow" style={{ width: 92, height: 'auto', display: 'block' }} />
+          <span style={{ font: "500 6.5px 'Space Mono',monospace", letterSpacing: '.1em', color: '#5A6B4B', border: '1px solid rgba(185,111,116,.5)', padding: '2px 4px', borderRadius: 3 }}>RUO</span>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
-          <div style={{ display: 'flex', background: 'rgba(255,255,255,.08)', border: '1px solid rgba(255,255,255,.12)', borderRadius: 999, padding: 2 }}>
-            <span onClick={v.setCustomer} style={{ font: "600 9.5px 'Manrope',sans-serif", padding: '5px 10px', borderRadius: 999, cursor: 'pointer', background: customer ? '#F5F3ED' : 'transparent', color: customer ? '#14161A' : '#A7ADB3' }}>Customer</span>
-            <span onClick={v.setAdmin} style={{ font: "600 9.5px 'Manrope',sans-serif", padding: '5px 10px', borderRadius: 999, cursor: 'pointer', background: customer ? 'transparent' : '#F5F3ED', color: customer ? '#A7ADB3' : '#14161A' }}>Admin</span>
+          <div style={{ display: 'flex', background: 'rgba(45,53,39,.08)', border: '1px solid rgba(45,53,39,.12)', borderRadius: 999, padding: 2 }}>
+            <span onClick={v.setCustomer} style={{ font: "600 9.5px 'Manrope',sans-serif", padding: '5px 10px', borderRadius: 999, cursor: 'pointer', background: customer ? '#FFDFE0' : 'transparent', color: customer ? '#2E3627' : '#4A5540' }}>Customer</span>
+            <span onClick={v.setAdmin} style={{ font: "600 9.5px 'Manrope',sans-serif", padding: '5px 10px', borderRadius: 999, cursor: 'pointer', background: customer ? 'transparent' : '#FFDFE0', color: customer ? '#4A5540' : '#2E3627' }}>Admin</span>
           </div>
           {customer && (
             <span onClick={v.openCart} style={{ position: 'relative', display: 'grid', placeItems: 'center', width: 34, height: 34, cursor: 'pointer' }}>
-              <Cart s={17} c="#F5F3ED" w={1.7} />
+              <Cart s={17} c="#2E3627" w={1.7} />
               {v.cartHasItems && (
-                <span style={{ position: 'absolute', top: -4, right: -4, minWidth: 16, height: 16, padding: '0 4px', display: 'grid', placeItems: 'center', background: '#C9A15E', color: '#14161A', font: "700 9px 'Space Mono',monospace", borderRadius: 999 }}>{v.cartCount}</span>
+                <span style={{ position: 'absolute', top: -4, right: -4, minWidth: 16, height: 16, padding: '0 4px', display: 'grid', placeItems: 'center', background: '#FFDFE0', color: '#B96F74', font: "700 9px 'Space Mono',monospace", borderRadius: 999 }}>{v.cartCount}</span>
               )}
             </span>
           )}
@@ -42,7 +42,7 @@ export default function MobileNav() {
       </div>
 
       {/* horizontal tab strip */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: 26, background: '#F5F3ED', borderBottom: '1px solid rgba(20,22,26,.1)', padding: '0 20px' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 26, background: '#FFDFE0', borderBottom: '1px solid rgba(45,53,39,.1)', padding: '0 20px' }}>
         {customer ? (
           <>
             <Box as="span" onClick={v.goCustCatalog} style={v.mtabCatalog}>Catalog</Box>
@@ -60,20 +60,20 @@ export default function MobileNav() {
       {/* hamburger drawer */}
       {v.dashNav && v.isMobile && (
         <>
-          <div onClick={v.closeDashNav} style={{ position: 'fixed', inset: 0, zIndex: 80, background: 'rgba(20,22,26,.4)', animation: 'ngMenuFade .25s ease' }} />
-          <div style={{ position: 'fixed', top: 68, left: 14, right: 14, zIndex: 81, borderRadius: 16, background: '#F5F3ED', boxShadow: '0 24px 54px rgba(20,22,26,.35)', overflow: 'hidden', animation: 'ngMenuSheet .28s cubic-bezier(.2,.9,.3,1)' }}>
-            <div style={{ font: "500 8.5px 'Space Mono',monospace", letterSpacing: '.2em', textTransform: 'uppercase', color: '#96702E', padding: '16px 22px 6px' }}>Customer</div>
+          <div onClick={v.closeDashNav} style={{ position: 'fixed', inset: 0, zIndex: 80, background: 'rgba(45,53,39,.4)', animation: 'ngMenuFade .25s ease' }} />
+          <div style={{ position: 'fixed', top: 68, left: 14, right: 14, zIndex: 81, borderRadius: 16, background: '#FFDFE0', boxShadow: '0 24px 54px rgba(45,53,39,.35)', overflow: 'hidden', animation: 'ngMenuSheet .28s cubic-bezier(.2,.9,.3,1)' }}>
+            <div style={{ font: "500 8.5px 'Space Mono',monospace", letterSpacing: '.2em', textTransform: 'uppercase', color: '#5A6B4B', padding: '16px 22px 6px' }}>Customer</div>
             <DrawerRow label="Catalog" onClick={v.drawerCustCatalog} />
             <DrawerRow label="My orders" onClick={v.drawerCustOrders} />
             <DrawerRow label="Account" onClick={v.drawerAccount} />
-            <div style={{ font: "500 8.5px 'Space Mono',monospace", letterSpacing: '.2em', textTransform: 'uppercase', color: '#96702E', padding: '14px 22px 6px' }}>Admin</div>
+            <div style={{ font: "500 8.5px 'Space Mono',monospace", letterSpacing: '.2em', textTransform: 'uppercase', color: '#5A6B4B', padding: '14px 22px 6px' }}>Admin</div>
             <DrawerRow label="Orders" onClick={v.drawerAdmOrders} />
             <DrawerRow label="Inventory" onClick={v.drawerAdmInventory} />
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '14px 22px', background: '#EDE9DF' }}>
-              <span style={{ display: 'grid', placeItems: 'center', width: 30, height: 30, borderRadius: '50%', background: '#C9A15E', color: '#14161A', font: "700 12px 'Manrope',sans-serif" }}>{v.authInitial}</span>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '14px 22px', background: '#FFF1F1' }}>
+              <span style={{ display: 'grid', placeItems: 'center', width: 30, height: 30, borderRadius: '50%', background: '#FFDFE0', color: '#B96F74', font: "700 12px 'Manrope',sans-serif" }}>{v.authInitial}</span>
               <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ font: "600 12.5px 'Manrope',sans-serif", color: '#14161A', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{v.authName}</div>
-                <div onClick={v.logout} style={{ font: "500 11px 'Manrope',sans-serif", color: '#96702E', cursor: 'pointer' }}>Log out</div>
+                <div style={{ font: "600 12.5px 'Manrope',sans-serif", color: '#2E3627', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{v.authName}</div>
+                <div onClick={v.logout} style={{ font: "500 11px 'Manrope',sans-serif", color: '#5A6B4B', cursor: 'pointer' }}>Log out</div>
               </div>
             </div>
           </div>

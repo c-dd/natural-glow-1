@@ -21,10 +21,10 @@ export default function Toasts() {
   }, []);
   if (!t) return null;
   return (
-    <div style={{ position: 'fixed', left: '50%', bottom: 26, transform: 'translateX(-50%)', zIndex: 200, display: 'flex', alignItems: 'center', gap: 14, background: '#14161A', color: '#F5F3ED', padding: '13px 22px', borderRadius: 999, boxShadow: '0 10px 30px rgba(20,22,26,.3)', font: "500 13px 'Manrope',sans-serif", whiteSpace: 'nowrap', animation: 'ngRise .3s cubic-bezier(.2,.7,.2,1)' }}>
+    <div style={{ position: 'fixed', left: '50%', bottom: 26, transform: 'translateX(-50%)', zIndex: 200, display: 'flex', alignItems: 'center', gap: 14, background: '#2E3627', color: '#FFDFE0', padding: '13px 22px', borderRadius: 999, boxShadow: '0 10px 30px rgba(45,53,39,.3)', font: "500 13px 'Manrope',sans-serif", whiteSpace: 'nowrap', animation: 'ngRise .3s cubic-bezier(.2,.7,.2,1)' }}>
       <span>{t.msg}</span>
       {t.action && (
-        <span onClick={() => { t.action.onClick?.(); setT(null); }} style={{ color: '#C9A15E', cursor: 'pointer', fontWeight: 600 }}>
+        <span onClick={() => { t.action.onClick?.(); setT(null); }} style={{ color: '#FFDFE0', cursor: 'pointer', fontWeight: 600 }}>
           {t.action.label}
         </span>
       )}

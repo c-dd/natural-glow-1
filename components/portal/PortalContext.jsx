@@ -24,15 +24,15 @@ export const usePortal = () => useContext(PortalContext);
 
 // ---- style helpers (verbatim from the source) ----
 const fmt = (n) => '$' + n;
-const statColor = (st) => ({ Processing: '#96702E', Shipped: '#3E7C5B', Cancelled: '#A8442E' }[st] || '#6B7178');
-const statBg = (st) => ({ Processing: 'rgba(150,112,46,.1)', Shipped: 'rgba(62,124,91,.13)', Cancelled: 'rgba(168,68,46,.1)' }[st] || 'rgba(20,22,26,.08)');
+const statColor = (st) => ({ Processing: '#B07A24', Shipped: '#3E7C5B', Cancelled: '#A8442E' }[st] || '#78826B');
+const statBg = (st) => ({ Processing: 'rgba(176,122,36,.1)', Shipped: 'rgba(62,124,91,.13)', Cancelled: 'rgba(168,68,46,.1)' }[st] || 'rgba(45,53,39,.08)');
 const statusPill = (st) => `font:600 9px 'Space Mono',monospace;letter-spacing:.08em;text-transform:uppercase;color:${statColor(st)};background:${statBg(st)};padding:5px 11px;border-radius:999px;`;
 const stockDot = (s) => `display:inline-block;width:7px;height:7px;border-radius:50%;background:${s <= 0 ? '#A8442E' : (s <= 20 ? '#B07A24' : '#3E7C5B')};`;
 const stockLbl = (s) => (s <= 0 ? 'Out' : (s <= 20 ? 'Low' : 'In stock'));
-const stepDot = (on) => `width:11px;height:11px;border-radius:50%;background:${on ? '#3E7C5B' : '#D6D1C4'};flex:none;transition:background .3s ease;`;
-const stepLine = (on) => `flex:1;height:2px;background:${on ? '#3E7C5B' : '#D6D1C4'};transition:background .3s ease;`;
-const sideStyle = (a) => `font:600 12.5px 'Manrope',sans-serif;padding:10px 12px;border-radius:9px;cursor:pointer;transition:all .2s ease;color:${a ? '#F5F3ED' : '#8A9098'};background:${a ? 'rgba(255,255,255,.08)' : 'transparent'};`;
-const mtabStyle = (a) => `font:600 13px 'Manrope',sans-serif;padding:14px 0 12px;cursor:pointer;transition:color .2s ease;border-bottom:2px solid ${a ? '#96702E' : 'transparent'};color:${a ? '#14161A' : '#6B7178'};`;
+const stepDot = (on) => `width:11px;height:11px;border-radius:50%;background:${on ? '#3E7C5B' : '#F3CBCD'};flex:none;transition:background .3s ease;`;
+const stepLine = (on) => `flex:1;height:2px;background:${on ? '#3E7C5B' : '#F3CBCD'};transition:background .3s ease;`;
+const sideStyle = (a) => `font:600 12.5px 'Manrope',sans-serif;padding:10px 12px;border-radius:9px;cursor:pointer;transition:all .2s ease;color:${a ? '#2E3627' : '#4A5540'};background:${a ? 'rgba(45,53,39,.08)' : 'transparent'};`;
+const mtabStyle = (a) => `font:600 13px 'Manrope',sans-serif;padding:14px 0 12px;cursor:pointer;transition:color .2s ease;border-bottom:2px solid ${a ? '#5A6B4B' : 'transparent'};color:${a ? '#2E3627' : '#78826B'};`;
 
 const dateObj = (iso) => { const d = new Date(iso + 'T00:00:00'); return isNaN(d) ? null : d; };
 const monthLabel = (iso) => { const d = dateObj(iso); return d ? d.toLocaleString('en-US', { month: 'long' }).toUpperCase() + ' ' + d.getFullYear() : String(iso); };
@@ -319,7 +319,7 @@ export function PortalProvider({ children }) {
       badge: p.name.replace(/[^A-Za-z0-9]/g, '').slice(0, 2).toUpperCase(), price: fmt(p.price),
       stockDotStyle: stockDot(stock), stockLabel: stockLbl(stock),
       addLabel: out ? 'Out of stock' : (inC ? 'Added · ' + inC : 'Add'),
-      addStyle: `flex:none;font:600 12px 'Manrope',sans-serif;padding:10px 20px;border-radius:999px;transition:transform .2s ease;` + (out ? `color:#8A8F95;background:#EAE6DB;cursor:not-allowed;` : `color:#fff;background:#14161A;cursor:pointer;`),
+      addStyle: `flex:none;font:600 12px 'Manrope',sans-serif;padding:10px 20px;border-radius:999px;transition:transform .2s ease;` + (out ? `color:#99A18C;background:#FCE9EA;cursor:not-allowed;` : `color:#2E3627;background:#9EAF8B;cursor:pointer;`),
       addItem: () => { if (stock > 0) addItem(p.id); },
       viewCoa: () => router.push(`/verify?lot=${encodeURIComponent(p.lot)}`),
     };
@@ -330,7 +330,7 @@ export function PortalProvider({ children }) {
     const low = p.stock <= 20;
     return {
       id: p.id, name: p.name, mg: p.mg, cat: p.cat, lot: p.lot, price: fmt(p.price), stock: p.stock,
-      stockStyle: `min-width:40px;text-align:center;font:700 14px 'Space Mono',monospace;color:${low ? '#B07A24' : '#14161A'};`,
+      stockStyle: `min-width:40px;text-align:center;font:700 14px 'Space Mono',monospace;color:${low ? '#B07A24' : '#2E3627'};`,
       edit: () => openEditInv(p.id),
     };
   });
@@ -355,7 +355,7 @@ export function PortalProvider({ children }) {
       canEdit: o.status === 'Processing', showCancel: o.status === 'Processing',
       cancelReason: o.cancelReason || '', cancelMsg: o.cancelMsg || '', hasCancelMsg: !!(o.cancelMsg && ('' + o.cancelMsg).trim()),
       pillStyle: statusPill(o.status), totalStr: fmt(orderTotal(o)),
-      cardStyle: `background:#fff;border:1px solid ${o.status === 'Cancelled' ? 'rgba(168,68,46,.25)' : 'rgba(20,22,26,.1)'};border-radius:14px;overflow:hidden;transition:border-color .2s ease;` + (o.status === 'Cancelled' ? 'opacity:.72;' : ''),
+      cardStyle: `background:#fff;border:1px solid ${o.status === 'Cancelled' ? 'rgba(168,68,46,.25)' : 'rgba(45,53,39,.1)'};border-radius:14px;overflow:hidden;transition:border-color .2s ease;` + (o.status === 'Cancelled' ? 'opacity:.72;' : ''),
       items: o.items.map((it) => ({ name: nameOf(it.id), mg: mgOf(it.id), qty: it.qty, lineStr: fmt(priceOf(it.id) * it.qty) })),
       dot1: stepDot(idx >= 0), lineA: stepLine(idx >= 1), dot2: stepDot(idx >= 1), lineB: stepLine(idx >= 2), dot3: stepDot(idx >= 2),
       markShipped: () => { shipOrder(o.id); toast('Order marked shipped'); },
@@ -375,7 +375,7 @@ export function PortalProvider({ children }) {
     rows: g.rows.map((o, i) => ({
       id: o.id, dateShort: shortDate(o.placed), statusLine: '● ' + o.status.toUpperCase(),
       statusStyle: `font:500 10px 'Space Mono',monospace;letter-spacing:.06em;color:${statColor(o.status)};margin-top:4px;`,
-      rowStyle: `display:flex;align-items:center;gap:12px;padding:15px 16px;cursor:pointer;` + (i === g.rows.length - 1 ? '' : `border-bottom:1px solid rgba(20,22,26,.07);`),
+      rowStyle: `display:flex;align-items:center;gap:12px;padding:15px 16px;cursor:pointer;` + (i === g.rows.length - 1 ? '' : `border-bottom:1px solid rgba(45,53,39,.07);`),
       totalStr: fmt(orderTotal(o)),
       open: () => { setDashView('orderdetail'); setOrderDetailId(o.id); scrollTop(); },
     })),
@@ -386,7 +386,7 @@ export function PortalProvider({ children }) {
     const o = orders.find((x) => x.id === orderDetailId);
     if (o) {
       const idx = o.status === 'Processing' ? 1 : (o.status === 'Shipped' ? 2 : -1);
-      const lbl = (on) => `font:500 8.5px 'Space Mono',monospace;letter-spacing:.06em;text-transform:uppercase;color:${on ? '#3E7C5B' : '#8A8F95'};`;
+      const lbl = (on) => `font:500 8.5px 'Space Mono',monospace;letter-spacing:.06em;text-transform:uppercase;color:${on ? '#3E7C5B' : '#99A18C'};`;
       detailOrder = {
         id: o.id, dateLong: longDate(o.placed), statusLabel: o.status, isCancelled: o.status === 'Cancelled',
         cancelReason: o.cancelReason || '', cancelMsg: o.cancelMsg || '', hasCancelMsg: !!(o.cancelMsg && ('' + o.cancelMsg).trim()),
@@ -409,9 +409,9 @@ export function PortalProvider({ children }) {
     const inO = editItems.find((it) => it.id === p.id); const out = p.stock <= 0;
     return {
       id: p.id, name: p.name, mg: p.mg, price: fmt(p.price),
-      rowStyle: `display:flex;align-items:center;gap:10px;padding:10px 14px;` + (out ? `cursor:default;opacity:.55;` : `cursor:pointer;`) + (i > 0 ? `border-top:1px solid rgba(20,22,26,.07);` : ''),
+      rowStyle: `display:flex;align-items:center;gap:10px;padding:10px 14px;` + (out ? `cursor:default;opacity:.55;` : `cursor:pointer;`) + (i > 0 ? `border-top:1px solid rgba(45,53,39,.07);` : ''),
       addLabel: out ? 'Out' : (inO ? 'Added · ' + inO.qty : '+ Add'),
-      addStyle: `flex:none;font:600 11px 'Manrope',sans-serif;` + (out ? `color:#9BA1A8;` : (inO ? `color:#3E7C5B;` : `color:#96702E;`)),
+      addStyle: `flex:none;font:600 11px 'Manrope',sans-serif;` + (out ? `color:#8B947E;` : (inO ? `color:#3E7C5B;` : `color:#5A6B4B;`)),
       add: out ? (() => {}) : (() => editAdd(p.id)),
     };
   });
@@ -421,9 +421,9 @@ export function PortalProvider({ children }) {
     ? { ref: proofOrder.id, file: proofOrder.proof || 'receipt.pdf', amount: fmt(orderTotal(proofOrder)), date: longDate(proofOrder.placed), payer: proofOrder.customer, bank: 'First Coastal Bank · Wire transfer' }
     : { ref: '', file: '', amount: '', date: '', payer: '', bank: '' };
 
-  const submitOrderStyle = `display:block;text-align:center;margin-top:16px;font:600 13px 'Manrope',sans-serif;padding:14px;border-radius:999px;transition:all .2s ease;` + (proofName ? `color:#fff;background:#14161A;cursor:pointer;` : `color:rgba(255,255,255,.9);background:#14161A;opacity:.4;cursor:not-allowed;`);
-  const editSaveStyle = `display:block;text-align:center;margin-top:16px;font:600 13px 'Manrope',sans-serif;padding:14px;border-radius:999px;transition:all .2s ease;` + (editItems.length ? `color:#fff;background:#14161A;cursor:pointer;` : `color:rgba(255,255,255,.9);background:#14161A;opacity:.4;cursor:not-allowed;`);
-  const npCreateStyle = `display:block;text-align:center;margin-top:4px;font:600 13px 'Manrope',sans-serif;padding:14px;border-radius:999px;transition:all .2s ease;` + ((npName.trim() && npPrice.trim() && npLot.trim()) ? `color:#fff;background:#14161A;cursor:pointer;` : `color:rgba(255,255,255,.9);background:#14161A;opacity:.4;cursor:not-allowed;`);
+  const submitOrderStyle = `display:block;text-align:center;margin-top:16px;font:600 13px 'Manrope',sans-serif;padding:14px;border-radius:999px;transition:all .2s ease;` + (proofName ? `color:#2E3627;background:#9EAF8B;cursor:pointer;` : `color:rgba(45,53,39,.9);background:#9EAF8B;opacity:.4;cursor:not-allowed;`);
+  const editSaveStyle = `display:block;text-align:center;margin-top:16px;font:600 13px 'Manrope',sans-serif;padding:14px;border-radius:999px;transition:all .2s ease;` + (editItems.length ? `color:#2E3627;background:#9EAF8B;cursor:pointer;` : `color:rgba(45,53,39,.9);background:#9EAF8B;opacity:.4;cursor:not-allowed;`);
+  const npCreateStyle = `display:block;text-align:center;margin-top:4px;font:600 13px 'Manrope',sans-serif;padding:14px;border-radius:999px;transition:all .2s ease;` + ((npName.trim() && npPrice.trim() && npLot.trim()) ? `color:#2E3627;background:#9EAF8B;cursor:pointer;` : `color:rgba(45,53,39,.9);background:#9EAF8B;opacity:.4;cursor:not-allowed;`);
 
   const v = {
     // layout / nav
@@ -431,8 +431,8 @@ export function PortalProvider({ children }) {
     setCustomer, setAdmin, goCustCatalog, goCustOrders, goAdmOrders, goAdmInventory, goAccount, backToOrders,
     drawerCustCatalog, drawerCustOrders, drawerAdmOrders, drawerAdmInventory, drawerAccount,
     toggleDashNav, closeDashNav,
-    dbarTop: `position:absolute;left:0;width:22px;height:1.6px;background:#F5F3ED;border-radius:1px;transition:transform .3s ease, top .3s ease;` + (dashNav ? `top:6px;transform:rotate(45deg);` : `top:3px;`),
-    dbarBot: `position:absolute;left:0;width:22px;height:1.6px;background:#F5F3ED;border-radius:1px;transition:transform .3s ease, top .3s ease;` + (dashNav ? `top:6px;transform:rotate(-45deg);` : `top:10px;`),
+    dbarTop: `position:absolute;left:0;width:22px;height:1.6px;background:#FFDFE0;border-radius:1px;transition:transform .3s ease, top .3s ease;` + (dashNav ? `top:6px;transform:rotate(45deg);` : `top:3px;`),
+    dbarBot: `position:absolute;left:0;width:22px;height:1.6px;background:#FFDFE0;border-radius:1px;transition:transform .3s ease, top .3s ease;` + (dashNav ? `top:6px;transform:rotate(-45deg);` : `top:10px;`),
     sideCustCatalog: sideStyle(dashView === 'catalog'),
     sideCustOrders: sideStyle(dashView === 'myorders' || dashView === 'orderdetail'),
     sideAccount: sideStyle(dashView === 'account'),
@@ -476,7 +476,7 @@ export function PortalProvider({ children }) {
     isCartStep: checkoutStep === 'cart', isShipStep: checkoutStep === 'shipping', isPaymentStep: checkoutStep === 'payment', isDoneStep: checkoutStep === 'done',
     inCheckoutFlow: ['cart', 'shipping', 'payment'].includes(checkoutStep) && cartCount > 0,
     stepProgressLabel: checkoutStep === 'cart' ? 'Step 1 of 3 · Cart' : (checkoutStep === 'shipping' ? 'Step 2 of 3 · Shipping' : 'Step 3 of 3 · Payment'),
-    stepFillStyle: `height:100%;border-radius:999px;background:#96702E;transition:width .35s cubic-bezier(.2,.7,.2,1);width:` + (checkoutStep === 'cart' ? '33%' : (checkoutStep === 'shipping' ? '66%' : '100%')),
+    stepFillStyle: `height:100%;border-radius:999px;background:#9EAF8B;transition:width .35s cubic-bezier(.2,.7,.2,1);width:` + (checkoutStep === 'cart' ? '33%' : (checkoutStep === 'shipping' ? '66%' : '100%')),
     checkoutTitle: checkoutStep === 'cart' ? 'Your cart' : (checkoutStep === 'shipping' ? 'Shipping details' : (checkoutStep === 'payment' ? 'Payment' : 'Order confirmed')),
     openCart, closeCart, goShipping, goPayment, backToCart, backToShipping,
     coName, coAddr, coCity, coState, coZip,

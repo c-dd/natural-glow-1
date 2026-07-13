@@ -25,7 +25,7 @@ export default function Dashboard() {
     <>
       <div className="ng-dash" style={{ display: 'grid', gridTemplateColumns: '236px 1fr', minHeight: '100vh' }}>
         <Sidebar />
-        <div style={{ background: '#EFECE4', minWidth: 0 }}>
+        <div style={{ background: '#FFDFE0', minWidth: 0 }}>
           <MobileNav />
           <CurrentView />
         </div>

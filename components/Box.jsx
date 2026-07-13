@@ -8,7 +8,7 @@ import { parseStyle } from '@/lib/style';
 // This mirrors the original design components' style="" + style-hover="" model
 // so the markup translates 1:1 and matches perfectly.
 //
-//   <Box as="a" href="/verify" style="color:#211b12" hover="opacity:.85">Verify</Box>
+//   <Box as="a" href="/verify" style="color:#2E3627" hover="opacity:.85">Verify</Box>
 //
 export function Box({
   as = 'div',
