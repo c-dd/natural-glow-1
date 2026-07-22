@@ -212,3 +212,24 @@ single-user dev.
 - **Env vars** (see `.env.example`):
   - `AUTH_JWT_SECRET` — HS256 signing secret (32-byte random; set as a Netlify **secret**).
   - `ADMIN_EMAILS` — admin allowlist (`support@caredigitalcareers.com`).
+
+## PRODUCTION SPIKE VERDICT (2026-07-22, /api/health on natural-glow-alt) — BINDING FOR ALL WORKSTREAMS
+
+Empirical result from live production Blobs (SDK 10.7.9):
+- `onlyIfNew` / `onlyIfMatch`: **NOT honored** — conditional writes are accepted
+  but conditions are ignored (stale-etag write modified; duplicate create modified).
+- `consistency:'strong'` read-after-write: **holds**.
+- Verdict: `conditionalWritesUsable: false` — in prod AND local.
+
+**Mandated fallback (all subsequent workstreams):** read-validate-write with
+last-write-wins, per the designed fallbacks:
+- Email uniqueness: pre-read the `email/{emailLower}` index before create; the
+  residual same-millisecond race is accepted and documented.
+- Order ids: counter read-modify-write PLUS a pre-write existence check on the
+  order key; on observed duplicate, re-mint. Residual race accepted.
+- Stock decrement/restock: read-validate-write; concurrent-order race can lose a
+  decrement — accepted at launch volume; admin inventory screen is the
+  reconciliation path. All inventory mutations stay in the single casUpdate-style
+  helper (now plain RMW) so this is one code path to upgrade later.
+- Escalation path unchanged: if volume grows, swap netlify/lib/blobs.mts to a
+  real DB (Netlify Postgres/Neon) behind the same helpers.
