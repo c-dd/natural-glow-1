@@ -8,7 +8,8 @@ import {
   readCart, bumpCart, clearCart,
   setStock, bumpStock, setLot, addExtraProduct,
   placeOrder as apiPlaceOrder, shipOrder, cancelOrder as apiCancelOrder, updateOrder,
-  readAccount, writeAccount, writeAuth, initials,
+  readAccount, writeAccount, initials,
+  useSession, readSessionUser, logout as apiLogout,
   CATEGORIES, hasCOA,
 } from '@/lib/store';
 
@@ -52,6 +53,11 @@ export function PortalProvider({ children }) {
   const orders = useOrders();
   const account = useAccount();
 
+  // ---- session / role (admin gating rides on the confirmed /me response) ----
+  const session = useSession();
+  const role = (session.user && session.user.role) || 'user';
+  const isAdmin = role === 'admin';
+
   const products = baseProducts.map((p) => ({ ...p, stock: inv.stock[p.id] ?? 0 }));
   const pById = {};
   products.forEach((p) => { pById[p.id] = p; });
@@ -88,6 +94,7 @@ export function PortalProvider({ children }) {
   const [editAddr, setEditAddr] = useState('');
 
   const [npOpen, setNpOpen] = useState(false);
+  const [npBusy, setNpBusy] = useState(false);
   const [npName, setNpName] = useState('');
   const [npSub, setNpSub] = useState('');
   const [npCat, setNpCat] = useState(CATEGORIES[0]);
@@ -97,6 +104,7 @@ export function PortalProvider({ children }) {
   const [npLot, setNpLot] = useState('');
 
   const [editInvOpen, setEditInvOpen] = useState(false);
+  const [invBusy, setInvBusy] = useState(false);
   const [editInvId, setEditInvId] = useState(null);
   const [editInvName, setEditInvName] = useState('');
   const [editInvStock, setEditInvStock] = useState('');
@@ -116,6 +124,7 @@ export function PortalProvider({ children }) {
   const [acctPwCur, setAcctPwCur] = useState('');
   const [acctPwNew, setAcctPwNew] = useState('');
   const [acctPwConf, setAcctPwConf] = useState('');
+  const [acctBusy, setAcctBusy] = useState(false);
 
   const scrollTop = () => { try { window.scrollTo(0, 0); } catch (e) {} };
 
@@ -128,23 +137,40 @@ export function PortalProvider({ children }) {
   };
 
   // ---- deep link: ?view= and ?cart=1 ----
+  // The session is already confirmed by the dashboard guard before this mounts,
+  // so readSessionUser() reflects the real role — admin views are gated on it.
   useEffect(() => {
+    const admin = ((readSessionUser() || {}).role) === 'admin';
     const params = new URLSearchParams(window.location.search);
     const view = params.get('view');
-    if (view === 'orders' || view === 'inventory') { setViewAs('admin'); setDashView(view); }
+    if (view === 'orders' || view === 'inventory') {
+      if (admin) { setViewAs('admin'); setDashView(view); }
+      else { setViewAs('customer'); setDashView('catalog'); }
+    }
     else if (view === 'catalog' || view === 'myorders') { setViewAs('customer'); setDashView(view); }
     else if (view === 'account') { setViewAs('customer'); setDashView('account'); populateAccount(); }
     if (params.get('cart') === '1') { setCartOpen(true); setCheckoutStep('cart'); }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // Safety net: if the confirmed session is NOT admin, never leave the UI in an
+  // admin view (e.g. an optimistic hint that the API later downgrades).
+  useEffect(() => {
+    if (!isAdmin && viewAs === 'admin') { setViewAs('customer'); setDashView('catalog'); }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isAdmin]);
+
   // ---- navigation ----
   const goHome = () => router.push('/');
   const goContact = () => router.push('/contact');
-  const logout = () => { writeAuth(false); setDashNav(false); router.push('/'); };
+  const logout = async () => {
+    setDashNav(false);
+    try { await apiLogout(); } catch { /* clear locally regardless */ }
+    router.push('/');
+  };
 
   const setCustomer = () => { setViewAs('customer'); setDashView('catalog'); };
-  const setAdmin = () => { setViewAs('admin'); setDashView('orders'); };
+  const setAdmin = () => { if (!isAdmin) return; setViewAs('admin'); setDashView('orders'); };
   const goCustCatalog = () => setDashView('catalog');
   const goCustOrders = () => setDashView('myorders');
   const goAdmOrders = () => setDashView('orders');
@@ -262,23 +288,30 @@ export function PortalProvider({ children }) {
   // a purity + a fresh released date and become verifiable immediately.
   const openNewPeptide = () => setNpOpen(true);
   const closeNp = () => setNpOpen(false);
-  const todayHuman = () => {
-    const M = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-    const d = new Date();
-    return `${d.getDate()} ${M[d.getMonth()]} ${d.getFullYear()}`;
-  };
-  const createPeptide = () => {
+  // POST /api/admin/products. Server mints the id, seeds stock, and stamps the
+  // released date (COA-bearing since a lot is required here). Pessimistic: the
+  // modal stays open + busy until the server confirms; 409 -> existing toast.
+  const createPeptide = async () => {
+    if (npBusy) return;
     const priceN = parseInt(npPrice, 10);
     const lot = npLot.trim().toUpperCase();
     if (!npName.trim() || isNaN(priceN) || !lot) { toast('Name, price, and lot number are required'); return; }
     if (products.some((p) => (p.lot || '').toUpperCase() === lot)) { toast('Lot ' + lot + ' already exists'); return; }
-    const id = 'new-' + Date.now();
     const stock = parseInt(npStock, 10);
-    const p = { id, name: npName.trim(), sub: npSub.trim() || 'Reference material', cat: npCat, mg: npMg.trim() || '50 mg', purity: '99.0%', lot, price: priceN, released: todayHuman() };
-    addExtraProduct(p);
-    setStock(id, isNaN(stock) ? 0 : stock);
-    setNpOpen(false); setNpName(''); setNpSub(''); setNpCat(CATEGORIES[0]); setNpMg(''); setNpPrice(''); setNpStock(''); setNpLot('');
-    toast(p.name + ' added to catalog');
+    setNpBusy(true);
+    try {
+      const created = await addExtraProduct({
+        name: npName.trim(), sub: npSub.trim() || 'Reference material', cat: npCat,
+        mg: npMg.trim() || '50 mg', price: priceN, lot, stock: isNaN(stock) ? 0 : stock,
+      });
+      setNpOpen(false); setNpName(''); setNpSub(''); setNpCat(CATEGORIES[0]); setNpMg(''); setNpPrice(''); setNpStock(''); setNpLot('');
+      toast((created?.name || npName.trim()) + ' added to catalog');
+    } catch (e) {
+      if (e && (e.status === 409 || e.code === 'lot_exists')) toast('Lot ' + lot + ' already exists');
+      else toast((e && e.message) || 'Could not add product — please try again');
+    } finally {
+      setNpBusy(false);
+    }
   };
 
   // ---- edit inventory ----
@@ -288,7 +321,11 @@ export function PortalProvider({ children }) {
     setEditInvLot(p.lot || ''); setEditInvHasCoa(hasCOA(p)); setEditInvOpen(true);
   };
   const closeEditInv = () => setEditInvOpen(false);
-  const saveEditInv = () => {
+  // PATCH /api/admin/inventory for stock; PATCH /api/admin/products/:id for the
+  // lot (COA-bearing only). Pessimistic + busy; the resource cache refreshes
+  // from each response so the inventory table shows the server value.
+  const saveEditInv = async () => {
+    if (invBusy) return;
     const p = pById[editInvId]; if (!p) { setEditInvOpen(false); return; }
     const stock = parseInt(editInvStock, 10);
     if (isNaN(stock) || stock < 0) { toast('Enter a valid stock quantity (0 or more)'); return; }
@@ -302,23 +339,69 @@ export function PortalProvider({ children }) {
       lotChanged = newLot !== (p.lot || '').toUpperCase();
       if (lotChanged && products.some((x) => x.id !== p.id && (x.lot || '').toUpperCase() === newLot)) { toast('Lot ' + newLot + ' already exists'); return; }
     }
-    setStock(editInvId, stock);
-    if (isCoa && lotChanged) setLot(editInvId, newLot);
-    setEditInvOpen(false);
-    toast(p.name + ' inventory updated');
+    setInvBusy(true);
+    try {
+      await setStock(editInvId, stock);
+      if (isCoa && lotChanged) await setLot(editInvId, newLot);
+      setEditInvOpen(false);
+      toast(p.name + ' inventory updated');
+    } catch (e) {
+      if (e && (e.status === 409 || e.code === 'lot_exists')) toast('Lot ' + newLot + ' already exists');
+      else toast((e && e.message) || 'Could not update inventory — please try again');
+    } finally {
+      setInvBusy(false);
+    }
   };
 
   // ---- account ----
-  const saveAccount = () => {
+  // PATCH /api/account. Profile fields save freely; an email change or a
+  // password change requires the current password (server-verified). Busy +
+  // typed-error toasts on the coded failures (BAD_CURRENT_PASSWORD/EMAIL_EXISTS).
+  const saveAccount = async () => {
+    if (acctBusy) return;
     const name = (acctName || '').trim();
     const email = (acctEmail || '').trim();
     if (!name) { toast('Name is required'); return; }
     if (!email || email.indexOf('@') === -1) { toast('Enter a valid email address'); return; }
-    writeAccount({ name, email, org: (acctOrg || '').trim(), address1: (acctAddr || '').trim(), city: (acctCity || '').trim(), state: (acctState || '').trim(), zip: (acctZip || '').trim(), country: (acctCountry || '').trim() });
-    setAcctPwCur(''); setAcctPwNew(''); setAcctPwConf('');
-    toast('Account updated');
+
+    const patch = {
+      name, email,
+      org: (acctOrg || '').trim(), address1: (acctAddr || '').trim(),
+      city: (acctCity || '').trim(), state: (acctState || '').trim(),
+      zip: (acctZip || '').trim(), country: (acctCountry || '').trim(),
+    };
+
+    const cur = acctPwCur, nw = acctPwNew, cf = acctPwConf;
+    const wantsPw = !!(nw || cf);
+    if (wantsPw) {
+      if (nw.length < 8) { toast('New password must be at least 8 characters'); return; }
+      if (nw !== cf) { toast('New passwords do not match'); return; }
+      if (!cur) { toast('Enter your current password to set a new one'); return; }
+      patch.currentPassword = cur;
+      patch.newPassword = nw;
+    }
+
+    const emailChanged = email.toLowerCase() !== ((account.email || '').toLowerCase());
+    if (emailChanged) {
+      if (!cur) { toast('Enter your current password to change your email'); return; }
+      patch.currentPassword = cur;
+    }
+
+    setAcctBusy(true);
+    try {
+      await writeAccount(patch);
+      setAcctPwCur(''); setAcctPwNew(''); setAcctPwConf('');
+      toast('Account updated');
+    } catch (e) {
+      const code = e && e.code;
+      if (code === 'BAD_CURRENT_PASSWORD') toast('Your current password is incorrect');
+      else if (code === 'EMAIL_EXISTS') toast('That email is already in use');
+      else if (code === 'validation_failed') toast('Please check your details and try again');
+      else toast((e && e.message) || 'Could not save changes — please try again');
+    } finally {
+      setAcctBusy(false);
+    }
   };
-  const forgotPw = () => toast('Password reset link sent — check your email');
 
   const stopProp = (e) => { if (e && e.stopPropagation) e.stopPropagation(); };
 
@@ -437,11 +520,11 @@ export function PortalProvider({ children }) {
 
   const submitOrderStyle = `display:block;text-align:center;margin-top:16px;font:600 13px 'Manrope',sans-serif;padding:14px;border-radius:999px;transition:all .2s ease;` + (proofName ? `color:#FFFFFF;background:#9EAF8B;cursor:pointer;` : `color:rgba(255,255,255,.9);background:#9EAF8B;opacity:.4;cursor:not-allowed;`);
   const editSaveStyle = `display:block;text-align:center;margin-top:16px;font:600 13px 'Manrope',sans-serif;padding:14px;border-radius:999px;transition:all .2s ease;` + (editItems.length ? `color:#FFFFFF;background:#9EAF8B;cursor:pointer;` : `color:rgba(255,255,255,.9);background:#9EAF8B;opacity:.4;cursor:not-allowed;`);
-  const npCreateStyle = `display:block;text-align:center;margin-top:4px;font:600 13px 'Manrope',sans-serif;padding:14px;border-radius:999px;transition:all .2s ease;` + ((npName.trim() && npPrice.trim() && npLot.trim()) ? `color:#FFFFFF;background:#9EAF8B;cursor:pointer;` : `color:rgba(255,255,255,.9);background:#9EAF8B;opacity:.4;cursor:not-allowed;`);
+  const npCreateStyle = `display:block;text-align:center;margin-top:4px;font:600 13px 'Manrope',sans-serif;padding:14px;border-radius:999px;transition:all .2s ease;` + ((npName.trim() && npPrice.trim() && npLot.trim() && !npBusy) ? `color:#FFFFFF;background:#9EAF8B;cursor:pointer;` : `color:rgba(255,255,255,.9);background:#9EAF8B;opacity:.4;cursor:not-allowed;`);
 
   const v = {
     // layout / nav
-    isMobile, viewAs, dashView, dashNav, goHome, goContact, logout,
+    isMobile, viewAs, dashView, dashNav, goHome, goContact, logout, role, isAdmin,
     setCustomer, setAdmin, goCustCatalog, goCustOrders, goAdmOrders, goAdmInventory, goAccount, backToOrders,
     drawerCustCatalog, drawerCustOrders, drawerAdmOrders, drawerAdmInventory, drawerAccount,
     toggleDashNav, closeDashNav,
@@ -473,7 +556,7 @@ export function PortalProvider({ children }) {
     onAcctAddr: (e) => setAcctAddr(e.target.value), onAcctCity: (e) => setAcctCity(e.target.value), onAcctState: (e) => setAcctState(e.target.value),
     onAcctZip: (e) => setAcctZip(e.target.value), onAcctCountry: (e) => setAcctCountry(e.target.value),
     onAcctPwCur: (e) => setAcctPwCur(e.target.value), onAcctPwNew: (e) => setAcctPwNew(e.target.value), onAcctPwConf: (e) => setAcctPwConf(e.target.value),
-    saveAccount, forgotPw,
+    saveAccount, acctBusy,
 
     // admin orders
     ordersList,
@@ -509,14 +592,14 @@ export function PortalProvider({ children }) {
     closeEdit, saveEdit, editSaveStyle,
 
     // new peptide modal
-    npOpen, closeNp, npName, npSub, npMg, npPrice, npStock, npLot,
+    npOpen, closeNp, npName, npSub, npMg, npPrice, npStock, npLot, npBusy,
     npCat, npCats: CATEGORIES, setNpCat: (cat) => setNpCat(cat),
     onNpName: (e) => setNpName(e.target.value), onNpSub: (e) => setNpSub(e.target.value), onNpMg: (e) => setNpMg(e.target.value),
     onNpPrice: (e) => setNpPrice(e.target.value), onNpStock: (e) => setNpStock(e.target.value), onNpLot: (e) => setNpLot(e.target.value),
     createPeptide, npCreateStyle,
 
     // edit inventory modal
-    editInvOpen, editInvName, editInvStock, editInvLot, editInvHasCoa,
+    editInvOpen, editInvName, editInvStock, editInvLot, editInvHasCoa, invBusy,
     onEditInvStock: (e) => setEditInvStock(e.target.value), onEditInvLot: (e) => setEditInvLot(e.target.value),
     saveEditInv, closeEditInv,
 

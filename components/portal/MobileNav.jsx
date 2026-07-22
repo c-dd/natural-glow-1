@@ -22,10 +22,12 @@ export default function MobileNav() {
           <span style={{ font: "500 6.5px 'Space Mono',monospace", letterSpacing: '.1em', color: 'rgba(255,255,255,.75)', border: '1px solid rgba(255,255,255,.5)', padding: '2px 4px', borderRadius: 3 }}>RUO</span>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
-          <div style={{ display: 'flex', background: 'rgba(255,255,255,.14)', border: '1px solid rgba(255,255,255,.18)', borderRadius: 999, padding: 2 }}>
-            <span onClick={v.setCustomer} style={{ font: "600 9.5px 'Manrope',sans-serif", padding: '5px 10px', borderRadius: 999, cursor: 'pointer', background: customer ? '#FFDFE0' : 'transparent', color: customer ? '#2E3627' : 'rgba(255,255,255,.75)' }}>Customer</span>
-            <span onClick={v.setAdmin} style={{ font: "600 9.5px 'Manrope',sans-serif", padding: '5px 10px', borderRadius: 999, cursor: 'pointer', background: customer ? 'transparent' : '#FFDFE0', color: customer ? 'rgba(255,255,255,.75)' : '#2E3627' }}>Admin</span>
-          </div>
+          {v.isAdmin && (
+            <div style={{ display: 'flex', background: 'rgba(255,255,255,.14)', border: '1px solid rgba(255,255,255,.18)', borderRadius: 999, padding: 2 }}>
+              <span onClick={v.setCustomer} style={{ font: "600 9.5px 'Manrope',sans-serif", padding: '5px 10px', borderRadius: 999, cursor: 'pointer', background: customer ? '#FFDFE0' : 'transparent', color: customer ? '#2E3627' : 'rgba(255,255,255,.75)' }}>Customer</span>
+              <span onClick={v.setAdmin} style={{ font: "600 9.5px 'Manrope',sans-serif", padding: '5px 10px', borderRadius: 999, cursor: 'pointer', background: customer ? 'transparent' : '#FFDFE0', color: customer ? 'rgba(255,255,255,.75)' : '#2E3627' }}>Admin</span>
+            </div>
+          )}
           {customer && (
             <span onClick={v.openCart} style={{ position: 'relative', display: 'grid', placeItems: 'center', width: 34, height: 34, cursor: 'pointer' }}>
               <Cart s={17} c="#FFFFFF" w={1.7} />

@@ -4,29 +4,76 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Box } from '@/components/Box';
 import Gate from '@/components/Gate';
-import Toasts, { toast } from '@/components/Toast';
-import { writeAccount, writeAuth } from '@/lib/store';
+import Toasts from '@/components/Toast';
+import { signup, login } from '@/lib/store';
 
 const tabStyle = (on) =>
   "flex:1;text-align:center;font:600 12px 'Manrope',sans-serif;padding:9px;border-radius:999px;cursor:pointer;" +
   (on ? 'background:rgba(255,255,255,.22);color:#FFFFFF;box-shadow:0 1px 3px rgba(45,53,39,.1)' : 'background:transparent;color:rgba(255,255,255,.75)');
+
+const inputStyle =
+  "width:100%;font:500 14px 'Manrope',sans-serif;color:#2E3627;background:#fff;border:1.5px solid rgba(45,53,39,.13);border-radius:10px;padding:12px 13px";
+const labelStyle =
+  "font:500 10px 'Space Mono',monospace;letter-spacing:.1em;text-transform:uppercase;color:#78826B;margin-bottom:6px";
+
+// Map a server error code to human copy.
+function errorCopy(err, mode) {
+  const code = err && err.code;
+  switch (code) {
+    case 'EMAIL_EXISTS':
+      return 'An account with that email already exists. Try signing in instead.';
+    case 'INVALID_CREDENTIALS':
+    case 'unauthenticated':
+      return 'Incorrect email or password.';
+    case 'LOCKED':
+      return 'Too many failed attempts. Please wait a few minutes and try again.';
+    case 'validation_failed':
+      return mode === 'signup'
+        ? 'Check your details — a name, a valid email, and an 8+ character password are required.'
+        : 'Enter a valid email and password.';
+    case 'network_error':
+      return 'Network error — please check your connection and try again.';
+    default:
+      return (err && err.message) || 'Something went wrong. Please try again.';
+  }
+}
 
 export default function SigninPage() {
   const router = useRouter();
   const [mode, setMode] = useState('signin'); // 'signin' | 'signup'
   const [email, setEmail] = useState('');
   const [name, setName] = useState('');
+  const [password, setPassword] = useState('');
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState('');
 
-  const doAuth = () => {
-    const em = email || '';
-    const derived = em.includes('@')
-      ? em.split('@')[0].replace(/[._-]+/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase())
-      : 'Researcher';
-    const finalName = (mode === 'signup' && name.trim()) ? name.trim() : (derived || 'Researcher');
-    writeAccount({ name: finalName, email: em });
-    writeAuth(true);
-    router.push('/dashboard');
+  const switchMode = (m) => { setMode(m); setError(''); };
+
+  const doAuth = async () => {
+    if (busy) return;
+    setError('');
+    const em = (email || '').trim();
+    if (!em || !password) { setError('Enter your email and password.'); return; }
+    if (mode === 'signup') {
+      if (!name.trim()) { setError('Enter your name.'); return; }
+      if (password.length < 8) { setError('Password must be at least 8 characters.'); return; }
+    }
+    setBusy(true);
+    try {
+      if (mode === 'signup') await signup({ name: name.trim(), email: em, password });
+      else await login({ email: em, password });
+      router.push('/dashboard');
+    } catch (err) {
+      setError(errorCopy(err, mode));
+      setBusy(false);
+    }
   };
+
+  const onKeyDown = (e) => { if (e.key === 'Enter') doAuth(); };
+
+  const submitLabel = busy
+    ? (mode === 'signin' ? 'Signing in…' : 'Creating account…')
+    : (mode === 'signin' ? 'Sign in' : 'Create account');
 
   return (
     <>
@@ -57,16 +104,32 @@ export default function SigninPage() {
               <Box as="h1" style="margin:0 0 6px;font:300 31px 'Spectral',serif;color:#2E3627">{mode === 'signin' ? 'Welcome back' : 'Create your account'}</Box>
               <Box as="p" style="margin:0 0 24px;font:400 13px 'Manrope',sans-serif;color:#78826B">Access the research catalog and Certificates of Analysis.</Box>
               <Box as="div" style="display:flex;background:#9EAF8B;border:1px solid rgba(255,255,255,.22);border-radius:999px;padding:3px;margin-bottom:24px">
-                <Box as="span" onClick={() => setMode('signin')} style={tabStyle(mode === 'signin')}>Sign in</Box>
-                <Box as="span" onClick={() => setMode('signup')} style={tabStyle(mode === 'signup')}>Sign up</Box>
+                <Box as="span" onClick={() => switchMode('signin')} style={tabStyle(mode === 'signin')}>Sign in</Box>
+                <Box as="span" onClick={() => switchMode('signup')} style={tabStyle(mode === 'signup')}>Sign up</Box>
               </Box>
               {mode === 'signup' && (
-                <Box as="div" style="margin-bottom:14px"><Box as="div" style="font:500 10px 'Space Mono',monospace;letter-spacing:.1em;text-transform:uppercase;color:#78826B;margin-bottom:6px">Name</Box><Box as="input" value={name} onChange={(e) => setName(e.target.value)} placeholder="Dr. Jane Okafor" style="width:100%;font:500 14px 'Manrope',sans-serif;color:#2E3627;background:#fff;border:1.5px solid rgba(45,53,39,.13);border-radius:10px;padding:12px 13px" /></Box>
+                <Box as="div" style="margin-bottom:14px">
+                  <Box as="div" style={labelStyle}>Name</Box>
+                  <Box as="input" value={name} onChange={(e) => setName(e.target.value)} onKeyDown={onKeyDown} placeholder="Dr. Jane Okafor" style={inputStyle} />
+                </Box>
               )}
-              <Box as="div" style="margin-bottom:14px"><Box as="div" style="font:500 10px 'Space Mono',monospace;letter-spacing:.1em;text-transform:uppercase;color:#78826B;margin-bottom:6px">Email</Box><Box as="input" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="jane@lab.edu" style="width:100%;font:500 14px 'Manrope',sans-serif;color:#2E3627;background:#fff;border:1.5px solid rgba(45,53,39,.13);border-radius:10px;padding:12px 13px" /></Box>
-              <Box as="div" style="margin-bottom:20px"><Box as="div" style="font:500 10px 'Space Mono',monospace;letter-spacing:.1em;text-transform:uppercase;color:#78826B;margin-bottom:6px">Password</Box><Box as="input" type="password" placeholder="••••••••" style="width:100%;font:500 14px 'Manrope',sans-serif;color:#2E3627;background:#fff;border:1.5px solid rgba(45,53,39,.13);border-radius:10px;padding:12px 13px" />{mode === 'signin' && (<Box as="div" className="ng-forgot" onClick={() => toast('Password reset link sent — check your email')} style="text-align:right;font:600 11.5px 'Manrope',sans-serif;color:#5A6B4B;cursor:pointer;margin-top:10px">Forgot password?</Box>)}</Box>
-              <Box as="span" onClick={doAuth} style="display:block;text-align:center;font:600 13px 'Manrope',sans-serif;color:#FFFFFF;background:#9EAF8B;padding:14px;border-radius:999px;cursor:pointer;transition:all .2s ease" hover="background:#8A9E76;transform:translateY(-1px)">{mode === 'signin' ? 'Sign in' : 'Create account'}</Box>
-              <Box as="p" style="margin:18px 0 0;text-align:center;font:400 10.5px/1.6 'Space Mono',monospace;color:#99A18C">Simulated access — any email and password will sign you in.</Box>
+              <Box as="div" style="margin-bottom:14px">
+                <Box as="div" style={labelStyle}>Email</Box>
+                <Box as="input" type="email" value={email} onChange={(e) => setEmail(e.target.value)} onKeyDown={onKeyDown} placeholder="jane@lab.edu" style={inputStyle} />
+              </Box>
+              <Box as="div" style="margin-bottom:20px">
+                <Box as="div" style={labelStyle}>Password</Box>
+                <Box as="input" type="password" value={password} onChange={(e) => setPassword(e.target.value)} onKeyDown={onKeyDown} placeholder={mode === 'signup' ? 'At least 8 characters' : '••••••••'} style={inputStyle} />
+                {mode === 'signin' && (
+                  <Box as="div" style="text-align:right;font:400 11px 'Manrope',sans-serif;color:#78826B;margin-top:10px">
+                    Trouble signing in? <Box as="a" href="mailto:support@caredigitalcareers.com" style="color:#5A6B4B;text-decoration:none;font-weight:600">Contact support</Box>
+                  </Box>
+                )}
+              </Box>
+              {error && (
+                <Box as="div" role="alert" style="margin:0 0 16px;font:500 12px/1.5 'Manrope',sans-serif;color:#A8442E;background:rgba(168,68,46,.08);border:1px solid rgba(168,68,46,.28);border-radius:10px;padding:10px 12px">{error}</Box>
+              )}
+              <Box as="span" onClick={doAuth} aria-disabled={busy} style={`display:block;text-align:center;font:600 13px 'Manrope',sans-serif;color:#FFFFFF;background:#9EAF8B;padding:14px;border-radius:999px;transition:all .2s ease;` + (busy ? 'opacity:.6;cursor:progress' : 'cursor:pointer')} hover={busy ? '' : 'background:#8A9E76;transform:translateY(-1px)'}>{submitLabel}</Box>
             </Box>
           </Box>
         </Box>

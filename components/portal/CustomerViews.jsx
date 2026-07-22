@@ -13,7 +13,7 @@ export function CatalogView() {
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 20 }}>
         <div>
           <div style={{ font: "500 10px 'Space Mono',monospace", letterSpacing: '.22em', textTransform: 'uppercase', color: '#5A6B4B', marginBottom: 10 }}>Your catalog</div>
-          <h1 style={{ margin: 0, font: "300 clamp(28px,3vw,40px)/1.05 'Spectral',serif" }}>Welcome, {v.authName}.</h1>
+          <h1 style={{ margin: 0, font: "300 clamp(28px,3vw,40px)/1.05 'Spectral',serif" }}>{v.authName ? `Welcome, ${v.authName}.` : 'Welcome.'}</h1>
           <p style={{ margin: '12px 0 0', font: "400 13.5px/1.65 'Manrope',sans-serif", color: '#4A5540' }}>Browse research-grade compounds and add them to your cart. Search by name, description, or lot.</p>
         </div>
         <Box className="ng-contentcart" onClick={v.openCart} style="position:relative;flex:none;display:grid;place-items:center;width:44px;height:44px;border-radius:12px;background:#fff;border:1px solid rgba(45,53,39,.13);cursor:pointer;transition:all .2s ease" hover="border-color:rgba(90,107,75,.5);transform:translateY(-1px)">
@@ -216,7 +216,7 @@ export function AccountView() {
     <div className="ng-dashpad" style={{ padding: '44px 48px', maxWidth: 720, animation: 'ngRise .45s cubic-bezier(.2,.7,.2,1)' }}>
       <div style={{ font: "500 10px 'Space Mono',monospace", letterSpacing: '.22em', textTransform: 'uppercase', color: '#5A6B4B', marginBottom: 10 }}>Your account</div>
       <h1 style={{ margin: 0, font: "300 clamp(28px,3vw,40px)/1.05 'Spectral',serif" }}>Account</h1>
-      <p style={{ margin: '12px 0 28px', font: "400 13.5px/1.65 'Manrope',sans-serif", color: '#4A5540' }}>Manage your profile, shipping address, and password. Details are saved to this browser for the demo.</p>
+      <p style={{ margin: '12px 0 28px', font: "400 13.5px/1.65 'Manrope',sans-serif", color: '#4A5540' }}>Manage your profile, shipping address, and password.</p>
 
       <div style={CARD}>
         <div style={SECT}>Profile</div>
@@ -245,15 +245,14 @@ export function AccountView() {
         <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
           <Field label="Current password" type="password" value={v.acctPwCur} onChange={v.onAcctPwCur} placeholder="••••••••" />
           <div style={{ display: 'flex', gap: 10 }}>
-            <Field wrapStyle={{ flex: 1 }} label="New password" type="password" value={v.acctPwNew} onChange={v.onAcctPwNew} placeholder="••••••••" />
+            <Field wrapStyle={{ flex: 1 }} label="New password" type="password" value={v.acctPwNew} onChange={v.onAcctPwNew} placeholder="At least 8 characters" />
             <Field wrapStyle={{ flex: 1 }} label="Confirm" type="password" value={v.acctPwConf} onChange={v.onAcctPwConf} placeholder="••••••••" />
           </div>
-          <div onClick={v.forgotPw} style={{ font: "600 11.5px 'Manrope',sans-serif", color: '#5A6B4B', cursor: 'pointer' }}>Forgot password?</div>
         </div>
-        <p style={{ margin: '14px 0 0', font: "400 10px/1.6 'Space Mono',monospace", color: '#99A18C' }}>Password fields are decorative in this demo and are never stored.</p>
+        <p style={{ margin: '14px 0 0', font: "400 10px/1.6 'Space Mono',monospace", color: '#99A18C' }}>Leave blank to keep your current password. Changing your password or email requires your current password.</p>
       </div>
 
-      <Box as="span" onClick={v.saveAccount} style="display:block;text-align:center;font:600 13px 'Manrope',sans-serif;color:#FFFFFF;background:#9EAF8B;padding:15px;border-radius:999px;cursor:pointer;transition:all .2s ease" hover="background:#8A9E76;transform:translateY(-1px)">Save changes</Box>
+      <Box as="span" onClick={v.saveAccount} aria-disabled={v.acctBusy} style={`display:block;text-align:center;font:600 13px 'Manrope',sans-serif;color:#FFFFFF;background:#9EAF8B;padding:15px;border-radius:999px;transition:all .2s ease;` + (v.acctBusy ? 'opacity:.6;cursor:progress' : 'cursor:pointer')} hover={v.acctBusy ? '' : 'background:#8A9E76;transform:translateY(-1px)'}>{v.acctBusy ? 'Saving…' : 'Save changes'}</Box>
     </div>
   );
 }
