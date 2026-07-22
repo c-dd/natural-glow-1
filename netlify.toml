@@ -1,0 +1,27 @@
+# ---------------------------------------------------------------------------
+# Natural Glow — authoritative Netlify config (root).
+#
+# Model: Next.js 15 STATIC EXPORT (next.config.mjs -> output:'export').
+# The site ships as static HTML in `out/`; there is NO server runtime for the
+# pages. Dynamic behaviour is provided by Netlify Functions (v2) under
+# netlify/functions, served same-origin at /api/* via each function's own
+# `export const config = { path: '/api/...' }`.
+#
+# DO NOT add @netlify/plugin-nextjs here — that plugin is for the Next.js
+# SSR/ISR runtime and is incompatible with (and unnecessary for) a static
+# export. Adding it would try to republish `.next` instead of `out/`.
+# ---------------------------------------------------------------------------
+
+[build]
+  command = "npm run build"
+  publish = "out"
+
+[build.environment]
+  # Pin the toolchain to Node 22 (matches local dev + CLI runtime).
+  NODE_VERSION = "22"
+
+[functions]
+  directory = "netlify/functions"
+  # esbuild is required to bundle the .mts (TypeScript ESM) functions + the
+  # shared netlify/lib code and node_modules deps (@netlify/blobs, jose, zod).
+  node_bundler = "esbuild"
