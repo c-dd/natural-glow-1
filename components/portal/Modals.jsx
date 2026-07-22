@@ -226,8 +226,8 @@ export function NewPeptideModal() {
   const v = usePortal();
   if (!v.npOpen) return null;
   const chip = (active) => (active
-    ? "font:600 11px 'Manrope',sans-serif;color:#FFFFFF;background:#9EAF8B;padding:8px 15px;border-radius:999px;cursor:pointer"
-    : "font:600 11px 'Manrope',sans-serif;color:#4A5540;background:#fff;border:1px solid rgba(45,53,39,.14);padding:8px 15px;border-radius:999px;cursor:pointer");
+    ? "font:600 11px 'Manrope',sans-serif;color:#FFFFFF;background:#9EAF8B;padding:8px 15px;border-radius:999px;cursor:pointer;white-space:nowrap"
+    : "font:600 11px 'Manrope',sans-serif;color:#4A5540;background:#fff;border:1px solid rgba(45,53,39,.14);padding:8px 15px;border-radius:999px;cursor:pointer;white-space:nowrap");
   return (
     <Box onClick={v.closeNp} style={OVERLAY + ';z-index:86'}>
       <Box onClick={v.stopProp} style={SHEET}>
@@ -240,10 +240,10 @@ export function NewPeptideModal() {
           <Field label="Sequence / description" value={v.npSub} onChange={v.onNpSub} placeholder="e.g. Pentadecapeptide · Gly-Glu-Pro…" />
           <div>
             <div style={{ font: "500 9px 'Space Mono',monospace", letterSpacing: '.1em', textTransform: 'uppercase', color: '#78826B', marginBottom: 7 }}>Category</div>
-            <div style={{ display: 'flex', gap: 8 }}>
-              <Box as="span" onClick={v.npSetCopper} style={chip(v.npIsCopper)}>Copper peptides</Box>
-              <Box as="span" onClick={v.npSetSignal} style={chip(v.npIsSignal)}>Signal peptides</Box>
-              <Box as="span" onClick={v.npSetMetabolic} style={chip(v.npIsMetabolic)}>Metabolic</Box>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+              {v.npCats.map((c) => (
+                <Box key={c} as="span" onClick={() => v.setNpCat(c)} style={chip(v.npCat === c)}>{c}</Box>
+              ))}
             </div>
           </div>
           <div style={{ display: 'flex', gap: 10 }}>
@@ -253,7 +253,7 @@ export function NewPeptideModal() {
           <div style={{ display: 'flex', gap: 10 }}>
             <Field wrapStyle={{ flex: 1 }} label="Initial stock" value={v.npStock} onChange={v.onNpStock} placeholder="50" />
           </div>
-          <Field label="Lot number *" value={v.npLot} onChange={v.onNpLot} placeholder="e.g. NG-0521" mono />
+          <Field label="Lot number *" value={v.npLot} onChange={v.onNpLot} placeholder="e.g. 26·0521" mono />
           <Box as="span" onClick={v.createPeptide} style={v.npCreateStyle} hover="background:#8A9E76">Add to catalog</Box>
           <p style={{ margin: 0, font: "400 10px/1.6 'Space Mono',monospace", color: '#99A18C', textAlign: 'center' }}>Appears immediately in the customer catalog and marketing site, with a verifiable COA.</p>
         </div>
@@ -276,12 +276,12 @@ export function EditInventoryModal() {
         <div style={{ padding: '18px 24px 24px', display: 'flex', flexDirection: 'column', gap: 13 }}>
           <div style={{ font: "400 20px 'Spectral',serif", color: '#2E3627' }}>{v.editInvName}</div>
           <Field label="Current stock" value={v.editInvStock} onChange={v.onEditInvStock} placeholder="0" />
-          <Field label="Lot / batch" value={v.editInvLot} onChange={v.onEditInvLot} placeholder="e.g. NG-0521" mono />
+          {v.editInvHasCoa && <Field label="Lot / batch" value={v.editInvLot} onChange={v.onEditInvLot} placeholder="e.g. 26·0701" mono />}
           <div style={{ display: 'flex', gap: 10, marginTop: 4 }}>
             <Box as="span" onClick={v.closeEditInv} style="flex:1;display:block;text-align:center;font:600 13px 'Manrope',sans-serif;padding:14px;border-radius:999px;color:#2E3627;background:#fff;border:1.5px solid rgba(45,53,39,.16);cursor:pointer;transition:all .2s ease" hover="border-color:rgba(45,53,39,.4)">Cancel</Box>
             <Box as="span" onClick={v.saveEditInv} style="flex:1;display:block;text-align:center;font:600 13px 'Manrope',sans-serif;padding:14px;border-radius:999px;color:#FFFFFF;background:#9EAF8B;cursor:pointer;transition:all .2s ease" hover="background:#8A9E76">Save changes</Box>
           </div>
-          <p style={{ margin: 0, font: "400 10px/1.6 'Space Mono',monospace", color: '#99A18C', textAlign: 'center' }}>Set the exact on-hand quantity. The lot / COA only changes if you edit the lot field.</p>
+          <p style={{ margin: 0, font: "400 10px/1.6 'Space Mono',monospace", color: '#99A18C', textAlign: 'center' }}>{v.editInvHasCoa ? 'Set the exact on-hand quantity. The lot / COA only changes if you edit the lot field.' : 'Set the exact on-hand quantity. This consumable carries no lot or COA.'}</p>
         </div>
       </Box>
     </Box>

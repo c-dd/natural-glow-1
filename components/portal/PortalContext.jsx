@@ -9,6 +9,7 @@ import {
   setStock, bumpStock, setLot, addExtraProduct,
   placeOrder as apiPlaceOrder, shipOrder, cancelOrder as apiCancelOrder, updateOrder,
   readAccount, writeAccount, writeAuth, initials,
+  CATEGORIES, hasCOA,
 } from '@/lib/store';
 
 // ---------------------------------------------------------------------------
@@ -89,7 +90,7 @@ export function PortalProvider({ children }) {
   const [npOpen, setNpOpen] = useState(false);
   const [npName, setNpName] = useState('');
   const [npSub, setNpSub] = useState('');
-  const [npCat, setNpCat] = useState('Copper peptides');
+  const [npCat, setNpCat] = useState(CATEGORIES[0]);
   const [npMg, setNpMg] = useState('');
   const [npPrice, setNpPrice] = useState('');
   const [npStock, setNpStock] = useState('');
@@ -100,6 +101,7 @@ export function PortalProvider({ children }) {
   const [editInvName, setEditInvName] = useState('');
   const [editInvStock, setEditInvStock] = useState('');
   const [editInvLot, setEditInvLot] = useState('');
+  const [editInvHasCoa, setEditInvHasCoa] = useState(false);
 
   const [proofId, setProofId] = useState(null);
 
@@ -256,11 +258,15 @@ export function PortalProvider({ children }) {
   };
 
   // ---- new peptide ----
+  // Admin-created products are COA-bearing (a lot is required), so they carry
+  // a purity + a fresh released date and become verifiable immediately.
   const openNewPeptide = () => setNpOpen(true);
   const closeNp = () => setNpOpen(false);
-  const npSetCopper = () => setNpCat('Copper peptides');
-  const npSetSignal = () => setNpCat('Signal peptides');
-  const npSetMetabolic = () => setNpCat('Metabolic');
+  const todayHuman = () => {
+    const M = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    const d = new Date();
+    return `${d.getDate()} ${M[d.getMonth()]} ${d.getFullYear()}`;
+  };
   const createPeptide = () => {
     const priceN = parseInt(npPrice, 10);
     const lot = npLot.trim().toUpperCase();
@@ -268,29 +274,36 @@ export function PortalProvider({ children }) {
     if (products.some((p) => (p.lot || '').toUpperCase() === lot)) { toast('Lot ' + lot + ' already exists'); return; }
     const id = 'new-' + Date.now();
     const stock = parseInt(npStock, 10);
-    const p = { id, name: npName.trim(), sub: npSub.trim() || 'Reference material', cat: npCat, mg: npMg.trim() || '50 mg', purity: '99.0%', cas: '—', lot, price: priceN, blurb: npName.trim() + ' lyophilized reference material.' };
+    const p = { id, name: npName.trim(), sub: npSub.trim() || 'Reference material', cat: npCat, mg: npMg.trim() || '50 mg', purity: '99.0%', lot, price: priceN, released: todayHuman() };
     addExtraProduct(p);
     setStock(id, isNaN(stock) ? 0 : stock);
-    setNpOpen(false); setNpName(''); setNpSub(''); setNpCat('Copper peptides'); setNpMg(''); setNpPrice(''); setNpStock(''); setNpLot('');
+    setNpOpen(false); setNpName(''); setNpSub(''); setNpCat(CATEGORIES[0]); setNpMg(''); setNpPrice(''); setNpStock(''); setNpLot('');
     toast(p.name + ' added to catalog');
   };
 
   // ---- edit inventory ----
   const openEditInv = (id) => {
     const p = pById[id]; if (!p) return;
-    setEditInvId(id); setEditInvName(p.name + ' · ' + p.mg); setEditInvStock(String(p.stock)); setEditInvLot(p.lot); setEditInvOpen(true);
+    setEditInvId(id); setEditInvName(p.name + ' · ' + p.mg); setEditInvStock(String(p.stock));
+    setEditInvLot(p.lot || ''); setEditInvHasCoa(hasCOA(p)); setEditInvOpen(true);
   };
   const closeEditInv = () => setEditInvOpen(false);
   const saveEditInv = () => {
     const p = pById[editInvId]; if (!p) { setEditInvOpen(false); return; }
     const stock = parseInt(editInvStock, 10);
     if (isNaN(stock) || stock < 0) { toast('Enter a valid stock quantity (0 or more)'); return; }
-    const newLot = editInvLot.trim().toUpperCase();
-    if (!newLot) { toast('Lot / batch is required'); return; }
-    const lotChanged = newLot !== (p.lot || '').toUpperCase();
-    if (lotChanged && products.some((x) => x.id !== p.id && (x.lot || '').toUpperCase() === newLot)) { toast('Lot ' + newLot + ' already exists'); return; }
+    // Lot / COA only applies to COA-bearing products. A COA-less consumable
+    // (syringe kit, bac water) saves stock-only — never blocked on a lot.
+    const isCoa = hasCOA(p);
+    let lotChanged = false, newLot = '';
+    if (isCoa) {
+      newLot = editInvLot.trim().toUpperCase();
+      if (!newLot) { toast('Lot / batch is required'); return; }
+      lotChanged = newLot !== (p.lot || '').toUpperCase();
+      if (lotChanged && products.some((x) => x.id !== p.id && (x.lot || '').toUpperCase() === newLot)) { toast('Lot ' + newLot + ' already exists'); return; }
+    }
     setStock(editInvId, stock);
-    if (lotChanged) setLot(editInvId, newLot);
+    if (isCoa && lotChanged) setLot(editInvId, newLot);
     setEditInvOpen(false);
     toast(p.name + ' inventory updated');
   };
@@ -311,25 +324,26 @@ export function PortalProvider({ children }) {
 
   // ---- derived: catalog + inventory search ----
   const q = (dashSearch || '').trim().toLowerCase();
-  const searched = products.filter((p) => !q || (p.name + ' ' + p.sub + ' ' + (p.cas || '') + ' ' + p.lot).toLowerCase().includes(q));
+  const searched = products.filter((p) => !q || (p.name + ' ' + p.sub + ' ' + (p.cas || '') + ' ' + (p.lot || '')).toLowerCase().includes(q));
   const dashList = searched.map((p) => {
     const stock = p.stock; const inC = cart[p.id] || 0; const out = stock <= 0;
+    const coa = hasCOA(p);
     return {
-      id: p.id, name: p.name, sub: p.sub, mg: p.mg, lot: p.lot,
+      id: p.id, name: p.name, sub: p.sub, mg: p.mg, lot: p.lot, hasCoa: coa,
       badge: p.name.replace(/[^A-Za-z0-9]/g, '').slice(0, 2).toUpperCase(), price: fmt(p.price),
       stockDotStyle: stockDot(stock), stockLabel: stockLbl(stock),
       addLabel: out ? 'Out of stock' : (inC ? 'Added · ' + inC : 'Add'),
       addStyle: `flex:none;font:600 12px 'Manrope',sans-serif;padding:10px 20px;border-radius:999px;transition:transform .2s ease;` + (out ? `color:#99A18C;background:#FCE9EA;cursor:not-allowed;` : `color:#FFFFFF;background:#9EAF8B;cursor:pointer;`),
       addItem: () => { if (stock > 0) addItem(p.id); },
-      viewCoa: () => router.push(`/verify?lot=${encodeURIComponent(p.lot)}`),
+      viewCoa: coa ? (() => router.push(`/verify?lot=${encodeURIComponent(p.lot)}`)) : null,
     };
   });
 
-  const invSearched = products.filter((p) => !q || (p.name + ' ' + p.sub + ' ' + p.lot).toLowerCase().includes(q));
+  const invSearched = products.filter((p) => !q || (p.name + ' ' + p.sub + ' ' + (p.lot || '')).toLowerCase().includes(q));
   const invList = invSearched.map((p) => {
     const low = p.stock <= 20;
     return {
-      id: p.id, name: p.name, mg: p.mg, cat: p.cat, lot: p.lot, price: fmt(p.price), stock: p.stock,
+      id: p.id, name: p.name, mg: p.mg, cat: p.cat, lot: p.lot || '—', price: fmt(p.price), stock: p.stock,
       stockStyle: `min-width:40px;text-align:center;font:700 14px 'Space Mono',monospace;color:${low ? '#B07A24' : '#2E3627'};`,
       edit: () => openEditInv(p.id),
     };
@@ -394,7 +408,7 @@ export function PortalProvider({ children }) {
         dot1: stepDot(idx >= 0), lineA: stepLine(idx >= 1), dot2: stepDot(idx >= 1), lineB: stepLine(idx >= 2), dot3: stepDot(idx >= 2),
         lbl1: lbl(idx >= 0), lbl2: lbl(idx >= 1), lbl3: lbl(idx >= 2),
         itemsLabel: o.items.length + (o.items.length === 1 ? ' item' : ' items'),
-        items: o.items.map((it) => { const p = pById[it.id]; return { qty: it.qty, name: nameOf(it.id), mg: mgOf(it.id), lineStr: fmt(priceOf(it.id) * it.qty), hasCoa: !!p, viewCoa: p ? (() => router.push(`/verify?lot=${encodeURIComponent(p.lot)}`)) : null }; }),
+        items: o.items.map((it) => { const p = pById[it.id]; const coa = hasCOA(p); return { qty: it.qty, name: nameOf(it.id), mg: mgOf(it.id), lineStr: fmt(priceOf(it.id) * it.qty), hasCoa: coa, viewCoa: coa ? (() => router.push(`/verify?lot=${encodeURIComponent(p.lot)}`)) : null }; }),
         subtotalStr: fmt(orderTotal(o)), totalStr: fmt(orderTotal(o)),
         method: 'Cold-pack express · 2-day', carrier: (o.status === 'Shipped' ? 'UPS' : 'Assigned at dispatch'),
         tracking: (o.status === 'Shipped' ? ('1Z 999 AA1 01 2345 ' + (o.id.split('-').pop() || '0000')) : 'Awaiting dispatch'),
@@ -496,14 +510,13 @@ export function PortalProvider({ children }) {
 
     // new peptide modal
     npOpen, closeNp, npName, npSub, npMg, npPrice, npStock, npLot,
-    npIsCopper: npCat === 'Copper peptides', npIsSignal: npCat === 'Signal peptides', npIsMetabolic: npCat === 'Metabolic',
-    npSetCopper, npSetSignal, npSetMetabolic,
+    npCat, npCats: CATEGORIES, setNpCat: (cat) => setNpCat(cat),
     onNpName: (e) => setNpName(e.target.value), onNpSub: (e) => setNpSub(e.target.value), onNpMg: (e) => setNpMg(e.target.value),
     onNpPrice: (e) => setNpPrice(e.target.value), onNpStock: (e) => setNpStock(e.target.value), onNpLot: (e) => setNpLot(e.target.value),
     createPeptide, npCreateStyle,
 
     // edit inventory modal
-    editInvOpen, editInvName, editInvStock, editInvLot,
+    editInvOpen, editInvName, editInvStock, editInvLot, editInvHasCoa,
     onEditInvStock: (e) => setEditInvStock(e.target.value), onEditInvLot: (e) => setEditInvLot(e.target.value),
     saveEditInv, closeEditInv,
 

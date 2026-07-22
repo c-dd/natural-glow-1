@@ -14,7 +14,7 @@ export function CatalogView() {
         <div>
           <div style={{ font: "500 10px 'Space Mono',monospace", letterSpacing: '.22em', textTransform: 'uppercase', color: '#5A6B4B', marginBottom: 10 }}>Your catalog</div>
           <h1 style={{ margin: 0, font: "300 clamp(28px,3vw,40px)/1.05 'Spectral',serif" }}>Welcome, {v.authName}.</h1>
-          <p style={{ margin: '12px 0 0', font: "400 13.5px/1.65 'Manrope',sans-serif", color: '#4A5540' }}>Browse research-grade peptides and add them to your cart. Search by name, sequence, CAS, or lot.</p>
+          <p style={{ margin: '12px 0 0', font: "400 13.5px/1.65 'Manrope',sans-serif", color: '#4A5540' }}>Browse research-grade compounds and add them to your cart. Search by name, description, or lot.</p>
         </div>
         <Box className="ng-contentcart" onClick={v.openCart} style="position:relative;flex:none;display:grid;place-items:center;width:44px;height:44px;border-radius:12px;background:#fff;border:1px solid rgba(45,53,39,.13);cursor:pointer;transition:all .2s ease" hover="border-color:rgba(90,107,75,.5);transform:translateY(-1px)">
           <Cart s={18} c="#2E3627" w={1.7} />
@@ -36,7 +36,7 @@ export function CatalogView() {
             <div className="ng-dashrow-badge" style={{ flex: 'none', width: 42, height: 42, borderRadius: 10, background: '#FFF1F1', display: 'grid', placeItems: 'center', font: "700 12px 'Space Mono',monospace", color: '#5A6B4B' }}>{p.badge}</div>
             <div className="ng-dashrow-main" style={{ flex: 1, minWidth: 0 }}>
               <div style={{ display: 'flex', alignItems: 'baseline', gap: 10 }}><span style={{ font: "600 15px 'Manrope',sans-serif" }}>{p.name}</span></div>
-              <div style={{ font: "400 12px 'Manrope',sans-serif", color: '#78826B', marginTop: 3 }}>{p.sub} · {p.mg} · Lot {p.lot} · <span onClick={p.viewCoa} style={{ color: '#5A6B4B', cursor: 'pointer' }}>COA</span></div>
+              <div style={{ font: "400 12px 'Manrope',sans-serif", color: '#78826B', marginTop: 3 }}>{p.sub} · {p.mg}{p.hasCoa && <> · Lot {p.lot} · <span onClick={p.viewCoa} style={{ color: '#5A6B4B', cursor: 'pointer' }}>COA</span></>}</div>
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 7, flex: 'none' }}><Box as="span" style={p.stockDotStyle} /><span style={{ font: "500 10.5px 'Manrope',sans-serif", color: '#78826B' }}>{p.stockLabel}</span></div>
             <span style={{ flex: 'none', font: "600 19px 'Spectral',serif", width: 58, textAlign: 'right' }}>{p.price}</span>

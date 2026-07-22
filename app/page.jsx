@@ -58,9 +58,8 @@ export default function HomePage() {
                           <Box as="div" style="font:400 12px 'Manrope',sans-serif;color:#78826B;margin-top:4px">{p.sub}</Box>
                         </div>
                       </Box>
-                      <Box as="div" style="font:400 12.5px/1.6 'Manrope',sans-serif;color:#4A5540">{p.blurb}</Box>
                       <Box as="div" style="display:flex;justify-content:space-between;align-items:center;padding-top:15px;border-top:1px solid rgba(45,53,39,.08);margin-top:auto">
-                        <Box as="span" style="font:500 10px 'Space Mono',monospace;letter-spacing:.08em;color:#78826B">{p.mg} · LOT {p.lot}</Box>
+                        <Box as="span" style="font:500 10px 'Space Mono',monospace;letter-spacing:.08em;color:#78826B">{p.mg}{p.lot ? ` · LOT ${p.lot}` : ''}</Box>
                         <Box as="span" style="font:600 12.5px 'Manrope',sans-serif;color:#2E3627">{signedIn ? 'View →' : 'Sign in →'}</Box>
                       </Box>
                     </Box>

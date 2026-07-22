@@ -6,13 +6,27 @@ import Gate from '@/components/Gate';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import Toasts from '@/components/Toast';
-import { useProducts, RELEASED } from '@/lib/store';
+import { useProducts, hasCOA } from '@/lib/store';
 
-const addDays = (iso, d) => {
-  const x = new Date(iso + 'T00:00:00');
-  x.setDate(x.getDate() + d);
-  return x.toISOString().slice(0, 10);
+// Released dates now live on each product (product.released, human form
+// "14 Jan 2026"). Retest = released + 24 months. COA-less products have no
+// released date and are never matchable here.
+const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+const parseHuman = (s) => {
+  const [dd, mon, yy] = String(s || '').replace(',', '').split(/\s+/);
+  const mi = MONTHS.indexOf(mon);
+  if (mi < 0) return null;
+  return new Date(Number(yy), mi, Number(dd) || 1);
 };
+const fmtHuman = (d) => `${d.getDate()} ${MONTHS[d.getMonth()]} ${d.getFullYear()}`;
+const retestFrom = (released) => {
+  const d = parseHuman(released);
+  if (!d) return '—';
+  d.setMonth(d.getMonth() + 24);
+  return fmtHuman(d);
+};
+// Lot match ignores separators so "26·0701", "26-0701" and "260701" all resolve.
+const normLot = (s) => String(s || '').toUpperCase().replace(/[^A-Z0-9]/g, '');
 
 const COA_ROWS = [
   { k: 'Appearance', v: 'White to off-white powder' },
@@ -29,9 +43,10 @@ export default function VerifyPage() {
 
   const doVerify = (raw) => {
     const value = raw != null ? raw : lotInput;
-    const key = (value || '').trim().toUpperCase();
-    const norm = key.startsWith('NG-') ? key : (key ? 'NG-' + key.replace(/^NG/, '') : key);
-    const p = products.find((x) => x.lot.toUpperCase() === key || x.lot.toUpperCase() === norm);
+    const key = normLot(value);
+    // Only COA-bearing products (purity + lot) are matchable; consumables
+    // carry a null lot and never resolve to a certificate.
+    const p = key ? products.find((x) => hasCOA(x) && normLot(x.lot) === key) : null;
     setResult(p || 'notfound');
     setTriedLot(value);
   };
@@ -50,11 +65,11 @@ export default function VerifyPage() {
 
   let record = null;
   if (verifyFound) {
-    const rel = RELEASED[result.lot] || '2026-01-01';
+    const released = result.released || '—';
     record = {
       name: result.name, sub: result.sub, lot: result.lot,
-      released: rel, retest: addDays(rel, 730),
-      analyst: 'M. Reyes, QC', ref: 'COA-' + result.lot.replace('NG-', '') + '-A',
+      released, retest: released !== '—' ? retestFrom(released) : '—',
+      analyst: 'M. Reyes, QC', ref: 'COA-' + String(result.lot).replace(/[^A-Za-z0-9]+/g, '-') + '-A',
       rows: COA_ROWS,
     };
   }
@@ -75,10 +90,10 @@ export default function VerifyPage() {
                   <Box as="p" style="margin:16px auto 0;max-width:460px;font:400 14.5px/1.7 'Manrope',sans-serif;color:#4A5540;text-wrap:pretty">Enter the lot number printed on your vial to retrieve its Certificate of Analysis, tied to that exact batch.</Box>
                 </Box>
                 <Box as="div" style="display:flex;gap:10px;margin:32px auto 0;max-width:520px">
-                  <Box as="input" value={lotInput} onChange={(e) => setLotInput(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter') doVerify(); }} placeholder="e.g. NG-0421" style="flex:1;font:500 15px 'Space Mono',monospace;letter-spacing:.06em;color:#2E3627;background:#fff;border:1.5px solid rgba(45,53,39,.16);border-radius:11px;padding:15px 16px;text-transform:uppercase;transition:border-color .2s ease" />
+                  <Box as="input" value={lotInput} onChange={(e) => setLotInput(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter') doVerify(); }} placeholder="e.g. 26·0701" style="flex:1;font:500 15px 'Space Mono',monospace;letter-spacing:.06em;color:#2E3627;background:#fff;border:1.5px solid rgba(45,53,39,.16);border-radius:11px;padding:15px 16px;text-transform:uppercase;transition:border-color .2s ease" />
                   <Box as="span" onClick={() => doVerify()} style="font:600 13px 'Manrope',sans-serif;color:#FFFFFF;background:#9EAF8B;padding:15px 26px;border-radius:11px;cursor:pointer;white-space:nowrap;transition:all .2s ease" hover="background:#8A9E76">Verify</Box>
                 </Box>
-                <Box as="div" style="text-align:center;margin-top:14px;font:400 11px 'Manrope',sans-serif;color:#99A18C">Try <Box as="span" onClick={() => setLotInput('NG-0421')} style="font-family:'Space Mono',monospace;color:#5A6B4B;cursor:pointer">NG-0421</Box> or <Box as="span" onClick={() => setLotInput('NG-0388')} style="font-family:'Space Mono',monospace;color:#5A6B4B;cursor:pointer">NG-0388</Box></Box>
+                <Box as="div" style="text-align:center;margin-top:14px;font:400 11px 'Manrope',sans-serif;color:#99A18C">Try <Box as="span" onClick={() => setLotInput('26·0701')} style="font-family:'Space Mono',monospace;color:#5A6B4B;cursor:pointer">26·0701</Box> or <Box as="span" onClick={() => setLotInput('26·0717')} style="font-family:'Space Mono',monospace;color:#5A6B4B;cursor:pointer">26·0717</Box></Box>
 
                 {verifyNotFound && (
                   <Box as="div" style="margin-top:30px;background:#FFF1F1;border:1px solid rgba(168,68,46,.3);border-radius:14px;padding:22px 24px;text-align:center;animation:ngRise .4s cubic-bezier(.2,.7,.2,1)">

@@ -13,7 +13,7 @@ export default function ProductPage() {
   const router = useRouter();
   const products = useProducts();
   const signedIn = useAuth();
-  const [pid, setPid] = useState('ghk-cu');
+  const [pid, setPid] = useState('ghk-cu-50');
 
   // Read ?id= client-side only (static export, no useSearchParams).
   useEffect(() => {
@@ -23,14 +23,18 @@ export default function ProductPage() {
     } catch { /* noop */ }
   }, []);
 
-  const product = products.find((p) => p.id === pid) || products.find((p) => p.id === 'ghk-cu') || products[0];
+  const product = products.find((p) => p.id === pid) || products.find((p) => p.id === 'ghk-cu-50') || products[0];
 
+  // Spec rows degrade gracefully for COA-less consumables: no CAS row (the
+  // catalog carries none), no purity/identity/lot rows without a COA. Every
+  // product still shows a complete presentation + category table.
   const specs = [
-    { k: 'CAS number', v: product.cas || '—' },
-    { k: 'Form', v: 'Lyophilized powder' },
-    { k: 'Net peptide', v: product.mg },
-    { k: 'Identity (MS)', v: 'Conforms' },
-    { k: 'Current lot', v: product.lot },
+    ...(product.cas ? [{ k: 'CAS number', v: product.cas }] : []),
+    { k: 'Presentation', v: product.format },
+    { k: 'Category', v: product.cat },
+    ...(product.purity ? [{ k: 'Purity (HPLC)', v: product.purity }] : []),
+    ...(product.coa ? [{ k: 'Identity (MS)', v: 'Conforms' }] : []),
+    ...(product.lot ? [{ k: 'Current lot', v: product.lot }] : []),
   ];
 
   const addToCart = () => {
@@ -52,7 +56,7 @@ export default function ProductPage() {
             {/* ============ PRODUCT ============ */}
             <Box as="div" style="padding:5vh 5vw 9vh;animation:ngRise .5s cubic-bezier(.2,.7,.2,1)">
               <Box as="div" style="max-width:900px;margin:0 auto">
-                <Box as="div" style="font:500 11px 'Space Mono',monospace;letter-spacing:.06em;color:#5A6B4B;margin-bottom:30px"><Box as="span" onClick={() => router.push('/catalog')} style="cursor:pointer;border-bottom:1px solid transparent;transition:border-color .2s ease" hover="border-color:rgba(90,107,75,.5)">CATALOG</Box> <Box as="span" style="color:#8B947E">/ {product.lot}</Box></Box>
+                <Box as="div" style="font:500 11px 'Space Mono',monospace;letter-spacing:.06em;color:#5A6B4B;margin-bottom:30px"><Box as="span" onClick={() => router.push('/catalog')} style="cursor:pointer;border-bottom:1px solid transparent;transition:border-color .2s ease" hover="border-color:rgba(90,107,75,.5)">CATALOG</Box> <Box as="span" style="color:#8B947E">/ {product.lot || product.name}</Box></Box>
                 <Box as="div" className="ng-product" style="display:grid;grid-template-columns:.92fr 1.08fr;gap:48px;align-items:start">
 
                   {/* vial visual */}
@@ -69,8 +73,8 @@ export default function ProductPage() {
                           <Box as="div" style="position:absolute;left:10px;right:10px;top:46px;background:#fff;border:1px solid rgba(45,53,39,.14);border-radius:3px;padding:11px 8px;text-align:center">
                             <Box as="div" style="font:700 10px 'Manrope',sans-serif;letter-spacing:.12em;color:#2E3627">{product.name}</Box>
                             <Box as="div" style="width:34px;height:1px;background:rgba(45,53,39,.18);margin:6px auto" />
-                            <Box as="div" style="font:500 6.5px 'Space Mono',monospace;letter-spacing:.08em;color:#5A6B4B">{product.mg} · LYOPHILIZED</Box>
-                            <Box as="div" style="font:500 6px 'Space Mono',monospace;letter-spacing:.06em;color:#78826B;margin-top:3px">LOT {product.lot} · RUO</Box>
+                            <Box as="div" style="font:500 6.5px 'Space Mono',monospace;letter-spacing:.08em;color:#5A6B4B">{product.coa ? `${product.mg} · LYOPHILIZED` : product.mg}</Box>
+                            <Box as="div" style="font:500 6px 'Space Mono',monospace;letter-spacing:.06em;color:#78826B;margin-top:3px">{product.lot ? `LOT ${product.lot} · RUO` : 'RUO'}</Box>
                           </Box>
                         </Box>
                       </Box>
@@ -85,7 +89,7 @@ export default function ProductPage() {
                     </Box>
                     <Box as="h1" style="margin:0;font:300 clamp(34px,3.6vw,46px)/1.05 'Spectral',serif;letter-spacing:-.01em">{product.name}</Box>
                     <Box as="div" style="font:400 14px 'Manrope',sans-serif;color:#78826B;margin-top:8px">{product.sub}</Box>
-                    <Box as="p" style="margin:22px 0 0;max-width:460px;font:400 14.5px/1.7 'Manrope',sans-serif;color:#4A5540;text-wrap:pretty">{product.blurb} Supplied as a lyophilized powder for in-vitro and laboratory research only.</Box>
+                    <Box as="p" style="margin:22px 0 0;max-width:460px;font:400 14.5px/1.7 'Manrope',sans-serif;color:#4A5540;text-wrap:pretty">{product.coa ? `${product.sub}. Supplied as a ${product.format} for in-vitro and laboratory research only.` : `${product.sub}. For laboratory and research use only.`}</Box>
                     <Box as="div" style="margin-top:28px;border:1px solid rgba(45,53,39,.11);border-radius:14px;overflow:hidden;background:#fff">
                       {specs.map((row) => (
                         <Box key={row.k} as="div" style="display:flex;justify-content:space-between;padding:12.5px 18px;border-top:1px solid rgba(45,53,39,.07);font:500 12.5px 'Manrope',sans-serif">
@@ -96,7 +100,7 @@ export default function ProductPage() {
                     </Box>
                     <Box as="div" className="ng-ctarow" style="display:flex;align-items:center;gap:16px;margin-top:28px">
                       <Box as="span" onClick={addToCart} style="font:600 13px 'Manrope',sans-serif;color:#FFFFFF;background:#9EAF8B;padding:15px 30px;border-radius:999px;cursor:pointer;transition:all .2s ease" hover="background:#8A9E76;transform:translateY(-1px)">Add to cart</Box>
-                      <Box as="span" onClick={() => router.push(`/verify?lot=${product.lot}`)} style="font:600 13px 'Manrope',sans-serif;color:#5A6B4B;cursor:pointer;border-bottom:1px solid transparent;transition:border-color .2s ease" hover="border-color:rgba(90,107,75,.5)">Verify this lot's COA →</Box>
+                      {product.lot && <Box as="span" onClick={() => router.push(`/verify?lot=${encodeURIComponent(product.lot)}`)} style="font:600 13px 'Manrope',sans-serif;color:#5A6B4B;cursor:pointer;border-bottom:1px solid transparent;transition:border-color .2s ease" hover="border-color:rgba(90,107,75,.5)">Verify this lot's COA →</Box>}
                     </Box>
                     <Box as="p" style="margin:22px 0 0;font:400 10.5px/1.6 'Space Mono',monospace;color:#99A18C">For Research Use Only. Not a drug, cosmetic, or food. Not for human or animal consumption.</Box>
                   </div>
