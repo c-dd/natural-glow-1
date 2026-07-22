@@ -1,13 +1,15 @@
 'use client';
 
-import { createContext, useContext, useEffect, useState } from 'react';
+import { createContext, useContext, useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { toast } from '@/components/Toast';
 import {
-  useProducts, useInventory, useCart, useOrders, useAccount, useMobile,
+  useProducts, useInventory, useCart, useOrders, useAdminOrders, useAccount, useMobile,
   readCart, bumpCart, clearCart,
-  setStock, bumpStock, setLot, addExtraProduct,
-  placeOrder as apiPlaceOrder, shipOrder, cancelOrder as apiCancelOrder, updateOrder,
+  setStock, setLot, addExtraProduct, refreshProducts,
+  refreshOrders, refreshAdminOrders,
+  placeOrder as apiPlaceOrder, uploadProof, shipOrder as apiShipOrder, cancelOrder as apiCancelOrder, updateOrder,
+  proofUrl,
   readAccount, writeAccount, initials,
   useSession, readSessionUser, logout as apiLogout,
   CATEGORIES, hasCOA,
@@ -46,17 +48,18 @@ export function PortalProvider({ children }) {
   const router = useRouter();
   const isMobile = useMobile(760);
 
-  // ---- global stores ----
-  const baseProducts = useProducts();
-  const inv = useInventory();
-  const cart = useCart();
-  const orders = useOrders();
-  const account = useAccount();
-
   // ---- session / role (admin gating rides on the confirmed /me response) ----
   const session = useSession();
   const role = (session.user && session.user.role) || 'user';
   const isAdmin = role === 'admin';
+
+  // ---- global stores ----
+  const baseProducts = useProducts();
+  const inv = useInventory();
+  const cart = useCart();
+  const orders = useOrders();                 // customer: own orders (GET /api/orders)
+  const adminOrders = useAdminOrders(isAdmin); // admin: all orders (GET /api/admin/orders) — dormant for non-admins
+  const account = useAccount();
 
   const products = baseProducts.map((p) => ({ ...p, stock: inv.stock[p.id] ?? 0 }));
   const pById = {};
@@ -64,7 +67,14 @@ export function PortalProvider({ children }) {
   const priceOf = (id) => pById[id]?.price || 0;
   const nameOf = (id) => pById[id]?.name || '';
   const mgOf = (id) => pById[id]?.mg || '';
-  const orderTotal = (o) => o.items.reduce((a, it) => a + priceOf(it.id) * it.qty, 0);
+  // Prefer the server-computed total + per-line unitPrice snapshots; fall back
+  // to the live catalog only for older/partial records.
+  const lineUnit = (it) => (typeof it.unitPrice === 'number' ? it.unitPrice : priceOf(it.id));
+  const itemName = (it) => it.name || nameOf(it.id);
+  const itemMg = (it) => it.mg || mgOf(it.id);
+  const orderTotal = (o) =>
+    typeof o.total === 'number' ? o.total : (o.items || []).reduce((a, it) => a + lineUnit(it) * it.qty, 0);
+  const adminOrderById = (id) => adminOrders.find((x) => x.id === id);
 
   // ---- local UI state ----
   const [viewAs, setViewAs] = useState('customer');
@@ -81,11 +91,17 @@ export function PortalProvider({ children }) {
   const [coState, setCoState] = useState('');
   const [coZip, setCoZip] = useState('');
   const [proofName, setProofName] = useState('');
+  const [proofKey, setProofKey] = useState('');
+  const [proofStatus, setProofStatus] = useState('idle'); // idle | uploading | attached | error
+  const [placing, setPlacing] = useState(false);
   const [lastOrderId, setLastOrderId] = useState('');
 
   const [cancelId, setCancelId] = useState(null);
   const [cancelReason, setCancelReason] = useState('Payment incorrect');
   const [cancelMsg, setCancelMsg] = useState('');
+  const [cancelBusy, setCancelBusy] = useState(false);
+  const [shippingId, setShippingId] = useState(null);
+  const [editBusy, setEditBusy] = useState(false);
 
   const [editOpen, setEditOpen] = useState(false);
   const [editId, setEditId] = useState(null);
@@ -160,6 +176,26 @@ export function PortalProvider({ children }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isAdmin]);
 
+  // Admin orders: refetch on entry + window focus, poll every 30s while visible.
+  useEffect(() => {
+    if (!(viewAs === 'admin' && dashView === 'orders')) return;
+    refreshAdminOrders();
+    const onFocus = () => refreshAdminOrders();
+    const iv = setInterval(() => { if (!document.hidden) refreshAdminOrders(); }, 30000);
+    window.addEventListener('focus', onFocus);
+    return () => { clearInterval(iv); window.removeEventListener('focus', onFocus); };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [viewAs, dashView]);
+
+  // Customer my-orders: refetch on entry, poll every 60s while visible.
+  useEffect(() => {
+    if (!(viewAs === 'customer' && (dashView === 'myorders' || dashView === 'orderdetail'))) return;
+    refreshOrders();
+    const iv = setInterval(() => { if (!document.hidden) refreshOrders(); }, 60000);
+    return () => clearInterval(iv);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [viewAs, dashView]);
+
   // ---- navigation ----
   const goHome = () => router.push('/');
   const goContact = () => router.push('/contact');
@@ -209,52 +245,122 @@ export function PortalProvider({ children }) {
   const backToCart = () => setCheckoutStep('cart');
   const backToShipping = () => setCheckoutStep('shipping');
 
-  const doPlaceOrder = (ov = {}) => {
-    const co = {
-      name: ov.coName ?? coName, addr: ov.coAddr ?? coAddr, city: ov.coCity ?? coCity,
-      st: ov.coState ?? coState, zip: ov.coZip ?? coZip, proof: ov.proofName ?? proofName,
-    };
+  // Async place: real server order. A SYNCHRONOUS ref guard (not the async
+  // `placing` state) makes a rapid double-click place exactly one order — both
+  // clicks share one render's closure, so a state flag would still read false.
+  const placingRef = useRef(false);
+  const doPlaceOrder = async () => {
+    if (placingRef.current || placing) return;
     const items = Object.entries(readCart()).map(([id, qty]) => ({ id, qty: Number(qty) }));
-    if (!items.length || !co.proof) return;
-    const cityLine = [co.city, [co.st, co.zip].filter(Boolean).join(' ')].filter(Boolean).join(', ');
-    const address = [co.addr, cityLine].filter(Boolean).join('\n') || '—';
-    const name = (co.name || '').trim() || account.name || 'Researcher';
-    const id = apiPlaceOrder({ items, name, address, proof: co.proof, placed: todayISO() });
-    clearCart();
-    setLastOrderId(id); setCheckoutStep('done');
-    setCoName(''); setCoAddr(''); setCoCity(''); setCoState(''); setCoZip(''); setProofName('');
+    if (!items.length) { toast('Your cart is empty'); return; }
+    if (proofStatus !== 'attached' || !proofKey) { toast('Attach your proof of payment first'); return; }
+    placingRef.current = true;
+    const shipping = {
+      name: (coName || '').trim() || account.name || 'Researcher',
+      addr1: (coAddr || '').trim(), city: (coCity || '').trim(),
+      state: (coState || '').trim(), zip: (coZip || '').trim(),
+    };
+    setPlacing(true);
+    try {
+      const order = await apiPlaceOrder({ items, shipping, proofKey });
+      clearCart();
+      setLastOrderId(order ? order.id : '');
+      setCheckoutStep('done');
+      setCoName(''); setCoAddr(''); setCoCity(''); setCoState(''); setCoZip('');
+      setProofName(''); setProofKey(''); setProofStatus('idle');
+      refreshProducts(); // stock changed server-side
+    } catch (e) {
+      if (e && e.code === 'INSUFFICIENT_STOCK') {
+        toast('Some items are no longer in stock — cart updated');
+        refreshProducts();
+        setCheckoutStep('cart');
+      } else if (e && e.code === 'BAD_PROOF') {
+        toast('Re-attach your proof of payment and try again');
+        setProofStatus('idle'); setProofKey(''); setProofName('');
+      } else if (e && e.status === 401) {
+        toast('Your session expired — please sign in again');
+      } else {
+        toast((e && e.message) || 'Could not place order — please try again');
+      }
+    } finally {
+      placingRef.current = false;
+      setPlacing(false);
+    }
   };
   const submitOrder = () => doPlaceOrder();
+  // Demo shortcut: prefill shipping fields ONLY (WS6 removes the button). A real
+  // receipt file is still required to submit — no auto-submit, no fake proof.
   const simulatePayment = () => {
-    const ov = {
-      coName: (coName || '').trim() || account.name || 'Dr. Jane Okafor',
-      coAddr: (coAddr || '').trim() || 'Institute of Molecular Research, 418 Marine Pkwy',
-      coCity: (coCity || '').trim() || 'San Diego',
-      coState: (coState || '').trim() || 'CA',
-      coZip: (coZip || '').trim() || '92101',
-      proofName: 'payment-receipt.pdf',
-    };
-    setCoName(ov.coName); setCoAddr(ov.coAddr); setCoCity(ov.coCity); setCoState(ov.coState); setCoZip(ov.coZip); setProofName(ov.proofName);
-    doPlaceOrder(ov);
+    setCoName((coName || '').trim() || account.name || 'Dr. Jane Okafor');
+    setCoAddr((coAddr || '').trim() || 'Institute of Molecular Research, 418 Marine Pkwy');
+    setCoCity((coCity || '').trim() || 'San Diego');
+    setCoState((coState || '').trim() || 'CA');
+    setCoZip((coZip || '').trim() || '92101');
+    toast('Shipping filled — attach a real receipt to submit');
   };
-  const onProofFile = (e) => { const f = e.target.files && e.target.files[0]; setProofName(f ? f.name : 'receipt.pdf'); };
-  const clearProof = () => setProofName('');
+  // Real upload on file select: idle → uploading → attached | error.
+  const onProofFile = async (e) => {
+    const f = e.target.files && e.target.files[0];
+    if (e && e.target) e.target.value = ''; // allow re-selecting the same file
+    if (!f) return;
+    if (f.size > 5 * 1024 * 1024) { setProofStatus('error'); setProofName(f.name); toast('File too large — max 5 MB'); return; }
+    setProofName(f.name);
+    setProofStatus('uploading');
+    try {
+      const res = await uploadProof(f);
+      setProofKey(res.proofKey);
+      setProofName(res.filename || f.name);
+      setProofStatus('attached');
+    } catch (err) {
+      setProofStatus('error');
+      if (err && err.status === 413) toast('File too large — max 5 MB');
+      else if (err && err.status === 415) toast('Unsupported file — upload a PDF, PNG, JPG, or WebP');
+      else toast((err && err.message) || 'Upload failed — please try again');
+    }
+  };
+  const clearProof = () => { setProofName(''); setProofKey(''); setProofStatus('idle'); };
   const doneGoOrders = () => { setCartOpen(false); setCheckoutStep('cart'); setViewAs('customer'); setDashView('myorders'); };
 
   // ---- admin order actions ----
   const askCancel = (id) => { setCancelId(id); setCancelReason('Payment incorrect'); setCancelMsg(''); };
   const cancelKeep = () => setCancelId(null);
-  const cancelConfirm = () => {
-    if (!cancelId) return;
-    apiCancelOrder(cancelId, cancelReason || 'Requested by customer', (cancelMsg || '').trim());
-    setCancelId(null); setCancelReason('Payment incorrect'); setCancelMsg('');
-    toast('Order cancelled · inventory restocked');
+  const cancelConfirm = async () => {
+    if (!cancelId || cancelBusy) return;
+    const id = cancelId;
+    setCancelBusy(true);
+    try {
+      await apiCancelOrder(id, cancelReason || 'Requested by customer', (cancelMsg || '').trim());
+      setCancelId(null); setCancelReason('Payment incorrect'); setCancelMsg('');
+      toast('Order cancelled · inventory restocked');
+      refreshProducts();
+    } catch (e) {
+      if (e && e.code === 'NOT_PROCESSING') toast('Only processing orders can be cancelled');
+      else toast((e && e.message) || 'Could not cancel — please try again');
+      refreshAdminOrders();
+    } finally {
+      setCancelBusy(false);
+    }
+  };
+
+  const markShipped = async (id) => {
+    if (shippingId) return;
+    setShippingId(id);
+    try {
+      await apiShipOrder(id);
+      toast('Order marked shipped');
+    } catch (e) {
+      if (e && e.code === 'NOT_PROCESSING') toast('Order is no longer processing');
+      else toast((e && e.message) || 'Could not mark shipped — please try again');
+      refreshAdminOrders();
+    } finally {
+      setShippingId(null);
+    }
   };
 
   const openEdit = (id) => {
-    const o = orders.find((x) => x.id === id); if (!o) return;
+    const o = adminOrderById(id); if (!o) return;
     setEditId(id);
-    setEditItems(o.items.map((it) => ({ id: it.id, name: nameOf(it.id), mg: mgOf(it.id), qty: it.qty, priceN: priceOf(it.id) })));
+    setEditItems(o.items.map((it) => ({ id: it.id, name: itemName(it), mg: itemMg(it), qty: it.qty, priceN: lineUnit(it) })));
     setEditName(o.customer); setEditAddr(o.address); setEditOpen(true);
   };
   const closeEdit = () => setEditOpen(false);
@@ -268,19 +374,25 @@ export function PortalProvider({ children }) {
       return ex ? prev.map((it) => (it.id === id ? { ...it, qty: it.qty + 1 } : it)) : [...prev, { id: p.id, name: p.name, mg: p.mg, qty: 1, priceN: p.price }];
     });
   };
-  const saveEdit = () => {
-    const o = orders.find((x) => x.id === editId); if (!o || !editItems.length) return;
-    if (o.status !== 'Shipped' && o.status !== 'Cancelled') {
-      const oldMap = {}; o.items.forEach((it) => { oldMap[it.id] = it.qty; });
-      const newMap = {}; editItems.forEach((it) => { newMap[it.id] = it.qty; });
-      const ids = new Set([...Object.keys(oldMap), ...Object.keys(newMap)]);
-      ids.forEach((id) => { const delta = (oldMap[id] || 0) - (newMap[id] || 0); if (delta !== 0) bumpStock(id, delta); });
-    }
+  // Server owns stock deltas + total recompute. Client sends items {id,qty} +
+  // customer/address; the response replaces the cached order.
+  const saveEdit = async () => {
+    if (editBusy) return;
+    const o = adminOrderById(editId); if (!o || !editItems.length) return;
     const items = editItems.map((it) => ({ id: it.id, qty: it.qty }));
-    const total = editItems.reduce((a, it) => a + it.priceN * it.qty, 0);
-    updateOrder(editId, { items, customer: editName, address: editAddr, total });
-    setEditOpen(false);
-    toast('Order updated · inventory synced');
+    setEditBusy(true);
+    try {
+      await updateOrder(editId, { items, customer: editName, address: editAddr });
+      setEditOpen(false);
+      toast('Order updated · inventory synced');
+      refreshProducts();
+    } catch (e) {
+      if (e && e.code === 'NOT_PROCESSING') toast('Order can no longer be edited');
+      else toast((e && e.message) || 'Could not update order — please try again');
+      refreshAdminOrders();
+    } finally {
+      setEditBusy(false);
+    }
   };
 
   // ---- new peptide ----
@@ -453,18 +565,18 @@ export function PortalProvider({ children }) {
       cancelReason: o.cancelReason || '', cancelMsg: o.cancelMsg || '', hasCancelMsg: !!(o.cancelMsg && ('' + o.cancelMsg).trim()),
       pillStyle: statusPill(o.status), totalStr: fmt(orderTotal(o)),
       cardStyle: `background:#fff;border:1px solid ${o.status === 'Cancelled' ? 'rgba(168,68,46,.25)' : 'rgba(45,53,39,.1)'};border-radius:14px;overflow:hidden;transition:border-color .2s ease;` + (o.status === 'Cancelled' ? 'opacity:.72;' : ''),
-      items: o.items.map((it) => ({ name: nameOf(it.id), mg: mgOf(it.id), qty: it.qty, lineStr: fmt(priceOf(it.id) * it.qty) })),
+      items: (o.items || []).map((it) => ({ name: itemName(it), mg: itemMg(it), qty: it.qty, lineStr: fmt(lineUnit(it) * it.qty) })),
       dot1: stepDot(idx >= 0), lineA: stepLine(idx >= 1), dot2: stepDot(idx >= 1), lineB: stepLine(idx >= 2), dot3: stepDot(idx >= 2),
-      markShipped: () => { shipOrder(o.id); toast('Order marked shipped'); },
+      markShipped: () => markShipped(o.id),
       viewProof: () => setProofId(o.id),
       openEdit: () => openEdit(o.id),
       askCancel: () => askCancel(o.id),
     };
   };
-  const ordersList = orders.map(orderView);
-  const myOrders = orders.filter((o) => o.mine).map(orderView);
+  const ordersList = adminOrders.map(orderView); // admin sees all orders
+  const myOrders = orders.map(orderView);        // customer sees own orders
 
-  const mine = orders.filter((o) => o.mine);
+  const mine = orders;
   const groups = [];
   mine.forEach((o) => { const lb = monthLabel(o.placed); let g = groups.find((x) => x.label === lb); if (!g) { g = { label: lb, rows: [] }; groups.push(g); } g.rows.push(o); });
   const myOrderGroups = groups.map((g) => ({
@@ -491,10 +603,12 @@ export function PortalProvider({ children }) {
         dot1: stepDot(idx >= 0), lineA: stepLine(idx >= 1), dot2: stepDot(idx >= 1), lineB: stepLine(idx >= 2), dot3: stepDot(idx >= 2),
         lbl1: lbl(idx >= 0), lbl2: lbl(idx >= 1), lbl3: lbl(idx >= 2),
         itemsLabel: o.items.length + (o.items.length === 1 ? ' item' : ' items'),
-        items: o.items.map((it) => { const p = pById[it.id]; const coa = hasCOA(p); return { qty: it.qty, name: nameOf(it.id), mg: mgOf(it.id), lineStr: fmt(priceOf(it.id) * it.qty), hasCoa: coa, viewCoa: coa ? (() => router.push(`/verify?lot=${encodeURIComponent(p.lot)}`)) : null }; }),
+        items: o.items.map((it) => { const p = pById[it.id]; const coa = hasCOA(p); return { qty: it.qty, name: itemName(it), mg: itemMg(it), lineStr: fmt(lineUnit(it) * it.qty), hasCoa: coa, viewCoa: coa ? (() => router.push(`/verify?lot=${encodeURIComponent(p.lot)}`)) : null }; }),
         subtotalStr: fmt(orderTotal(o)), totalStr: fmt(orderTotal(o)),
-        method: 'Cold-pack express · 2-day', carrier: (o.status === 'Shipped' ? 'UPS' : 'Assigned at dispatch'),
-        tracking: (o.status === 'Shipped' ? ('1Z 999 AA1 01 2345 ' + (o.id.split('-').pop() || '0000')) : 'Awaiting dispatch'),
+        // Honest shipment states — real carrier tracking is a later phase.
+        method: 'Cold-pack express · 2-day',
+        carrier: (o.status === 'Shipped' ? 'Dispatched' : (o.status === 'Cancelled' ? '—' : 'Assigned at dispatch')),
+        tracking: (o.status === 'Cancelled' ? '—' : (o.status === 'Shipped' ? 'Awaiting carrier scan' : 'Awaiting dispatch')),
         name: o.customer, address: o.address,
       };
     }
@@ -513,13 +627,16 @@ export function PortalProvider({ children }) {
     };
   });
 
-  const proofOrder = orders.find((x) => x.id === proofId);
-  const proofReceipt = proofOrder
-    ? { ref: proofOrder.id, file: proofOrder.proof || 'receipt.pdf', amount: fmt(orderTotal(proofOrder)), date: longDate(proofOrder.placed), payer: proofOrder.customer, bank: 'First Coastal Bank · Wire transfer' }
-    : { ref: '', file: '', amount: '', date: '', payer: '', bank: '' };
+  // The proof modal streams the REAL stored bytes from GET /api/proofs/{orderId}
+  // (same-origin cookie auth). No fabricated bank receipt.
+  const proofOrder = adminOrderById(proofId) || orders.find((x) => x.id === proofId);
+  const proofView = proofOrder
+    ? { ref: proofOrder.id, file: proofOrder.proof || 'receipt', src: proofUrl(proofOrder.id) }
+    : { ref: '', file: '', src: '' };
 
-  const submitOrderStyle = `display:block;text-align:center;margin-top:16px;font:600 13px 'Manrope',sans-serif;padding:14px;border-radius:999px;transition:all .2s ease;` + (proofName ? `color:#FFFFFF;background:#9EAF8B;cursor:pointer;` : `color:rgba(255,255,255,.9);background:#9EAF8B;opacity:.4;cursor:not-allowed;`);
-  const editSaveStyle = `display:block;text-align:center;margin-top:16px;font:600 13px 'Manrope',sans-serif;padding:14px;border-radius:999px;transition:all .2s ease;` + (editItems.length ? `color:#FFFFFF;background:#9EAF8B;cursor:pointer;` : `color:rgba(255,255,255,.9);background:#9EAF8B;opacity:.4;cursor:not-allowed;`);
+  const canSubmit = proofStatus === 'attached' && !placing && cartCount > 0;
+  const submitOrderStyle = `display:block;text-align:center;margin-top:16px;font:600 13px 'Manrope',sans-serif;padding:14px;border-radius:999px;transition:all .2s ease;` + (canSubmit ? `color:#FFFFFF;background:#9EAF8B;cursor:pointer;` : `color:rgba(255,255,255,.9);background:#9EAF8B;opacity:.4;cursor:not-allowed;`);
+  const editSaveStyle = `display:block;text-align:center;margin-top:16px;font:600 13px 'Manrope',sans-serif;padding:14px;border-radius:999px;transition:all .2s ease;` + (editItems.length && !editBusy ? `color:#FFFFFF;background:#9EAF8B;cursor:pointer;` : `color:rgba(255,255,255,.9);background:#9EAF8B;opacity:.4;cursor:not-allowed;`);
   const npCreateStyle = `display:block;text-align:center;margin-top:4px;font:600 13px 'Manrope',sans-serif;padding:14px;border-radius:999px;transition:all .2s ease;` + ((npName.trim() && npPrice.trim() && npLot.trim() && !npBusy) ? `color:#FFFFFF;background:#9EAF8B;cursor:pointer;` : `color:rgba(255,255,255,.9);background:#9EAF8B;opacity:.4;cursor:not-allowed;`);
 
   const v = {
@@ -560,10 +677,10 @@ export function PortalProvider({ children }) {
 
     // admin orders
     ordersList,
-    statOpen: orders.filter((o) => o.status === 'Processing').length,
-    statShipped: orders.filter((o) => o.status === 'Shipped').length,
-    statCancelled: orders.filter((o) => o.status === 'Cancelled').length,
-    statRevenue: '$' + orders.filter((o) => o.status !== 'Cancelled').reduce((a, o) => a + orderTotal(o), 0).toLocaleString('en-US'),
+    statOpen: adminOrders.filter((o) => o.status === 'Processing').length,
+    statShipped: adminOrders.filter((o) => o.status === 'Shipped').length,
+    statCancelled: adminOrders.filter((o) => o.status === 'Cancelled').length,
+    statRevenue: '$' + adminOrders.filter((o) => o.status !== 'Cancelled').reduce((a, o) => a + orderTotal(o), 0).toLocaleString('en-US'),
 
     // inventory
     invList, statSkus: products.length, totalUnits, lowCount, openNewPeptide,
@@ -578,18 +695,19 @@ export function PortalProvider({ children }) {
     openCart, closeCart, goShipping, goPayment, backToCart, backToShipping,
     coName, coAddr, coCity, coState, coZip,
     onCoName: (e) => setCoName(e.target.value), onCoAddr: (e) => setCoAddr(e.target.value), onCoCity: (e) => setCoCity(e.target.value), onCoState: (e) => setCoState(e.target.value), onCoZip: (e) => setCoZip(e.target.value),
-    noProof: !proofName, hasProof: !!proofName, proofName, onProofFile, clearProof,
-    submitOrderStyle, submitOrder, simulatePayment, lastOrderId, doneGoOrders,
+    proofStatus, proofName, onProofFile, clearProof,
+    submitOrderStyle, submitOrder, submitLabel: placing ? 'Placing order…' : 'Submit order',
+    placing, simulatePayment, lastOrderId, doneGoOrders,
 
     // cancel modal
     cancelOpen: !!cancelId, cancelOrderId: cancelId, cancelReason, cancelMsg,
     onCancelReason: (e) => setCancelReason(e.target.value), onCancelMsg: (e) => setCancelMsg(e.target.value),
-    cancelConfirm, cancelKeep,
+    cancelConfirm, cancelKeep, cancelBusy,
 
     // edit order modal
     editOpen, editId, editLines, editCatalog, editEmpty: editItems.length === 0, editTotalStr: fmt(editTotal),
     editName, editAddr, onEditName: (e) => setEditName(e.target.value), onEditAddr: (e) => setEditAddr(e.target.value),
-    closeEdit, saveEdit, editSaveStyle,
+    closeEdit, saveEdit, editSaveStyle, editBusy,
 
     // new peptide modal
     npOpen, closeNp, npName, npSub, npMg, npPrice, npStock, npLot, npBusy,
@@ -603,8 +721,8 @@ export function PortalProvider({ children }) {
     onEditInvStock: (e) => setEditInvStock(e.target.value), onEditInvLot: (e) => setEditInvLot(e.target.value),
     saveEditInv, closeEditInv,
 
-    // proof modal
-    showProof: !!proofId, proofReceipt, closeProof: () => setProofId(null),
+    // proof modal — authenticated stream of the real stored bytes
+    showProof: !!proofId, proofView, closeProof: () => setProofId(null),
 
     stopProp,
   };

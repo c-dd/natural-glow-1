@@ -3,7 +3,7 @@
 import { Box } from '@/components/Box';
 import { usePortal } from './PortalContext';
 import { Field, Area } from './Field';
-import { Upload, FileIcon, CheckMark } from './icons';
+import { Upload, FileIcon } from './icons';
 
 const OVERLAY = 'position:fixed;inset:0;background:rgba(45,53,39,.48);backdrop-filter:blur(4px);display:flex;align-items:center;justify-content:center;padding:20px;animation:ngFade .3s ease';
 const SHEET = 'width:464px;max-width:100%;max-height:88vh;overflow:auto;background:#FFFFFF;border:1px solid rgba(45,53,39,.13);border-radius:18px;box-shadow:0 44px 90px -30px rgba(45,53,39,.65);animation:ngPop .4s cubic-bezier(.2,.7,.2,1)';
@@ -97,22 +97,27 @@ export function CartPopup() {
             </div>
             <div style={{ marginTop: 14 }}>
               <div style={{ font: "500 9px 'Space Mono',monospace", letterSpacing: '.1em', textTransform: 'uppercase', color: '#78826B', marginBottom: 7 }}>Proof of payment</div>
-              {v.noProof ? (
-                <label style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6, border: '1.5px dashed rgba(45,53,39,.22)', borderRadius: 11, padding: 24, cursor: 'pointer', background: '#FFF1F1', textAlign: 'center', transition: 'border-color .2s ease' }}>
-                  <Upload s={22} c="#5A6B4B" w={1.6} />
-                  <span style={{ font: "600 12.5px 'Manrope',sans-serif", color: '#2E3627' }}>Click to upload receipt</span>
-                  <span style={{ font: "400 10.5px 'Manrope',sans-serif", color: '#99A18C' }}>PDF, PNG or JPG</span>
-                  <input type="file" onChange={v.onProofFile} style={{ display: 'none' }} />
-                </label>
-              ) : (
+              {v.proofStatus === 'attached' ? (
                 <div style={{ display: 'flex', alignItems: 'center', gap: 10, border: '1.5px solid rgba(62,124,91,.4)', background: 'rgba(62,124,91,.07)', borderRadius: 11, padding: '13px 15px', animation: 'ngRise .3s ease' }}>
                   <span style={{ display: 'grid', placeItems: 'center', width: 24, height: 24, borderRadius: '50%', background: '#3E7C5B', color: '#fff', fontSize: 13, animation: 'ngStamp .45s cubic-bezier(.34,1.56,.64,1)' }}>✓</span>
-                  <div style={{ flex: 1, minWidth: 0 }}><div style={{ font: "600 12.5px 'Manrope',sans-serif", color: '#2E3627' }}>{v.proofName}</div><div style={{ font: "400 10.5px 'Manrope',sans-serif", color: '#78826B' }}>Attached</div></div>
+                  <div style={{ flex: 1, minWidth: 0 }}><div style={{ font: "600 12.5px 'Manrope',sans-serif", color: '#2E3627', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{v.proofName}</div><div style={{ font: "400 10.5px 'Manrope',sans-serif", color: '#78826B' }}>Attached · uploaded securely</div></div>
                   <span onClick={v.clearProof} style={{ cursor: 'pointer', color: '#A8442E', font: "400 16px 'Manrope',sans-serif" }}>×</span>
                 </div>
+              ) : v.proofStatus === 'uploading' ? (
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10, border: '1.5px solid rgba(45,53,39,.18)', background: '#FFF7F1', borderRadius: 11, padding: '13px 15px' }}>
+                  <span style={{ display: 'grid', placeItems: 'center', width: 24, height: 24, borderRadius: '50%', border: '2px solid rgba(90,107,75,.3)', borderTopColor: '#5A6B4B', animation: 'ngSpin .8s linear infinite' }} />
+                  <div style={{ flex: 1, minWidth: 0 }}><div style={{ font: "600 12.5px 'Manrope',sans-serif", color: '#2E3627', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{v.proofName || 'Receipt'}</div><div style={{ font: "400 10.5px 'Manrope',sans-serif", color: '#78826B' }}>Uploading…</div></div>
+                </div>
+              ) : (
+                <label style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6, border: v.proofStatus === 'error' ? '1.5px dashed rgba(168,68,46,.5)' : '1.5px dashed rgba(45,53,39,.22)', borderRadius: 11, padding: 24, cursor: 'pointer', background: v.proofStatus === 'error' ? 'rgba(168,68,46,.06)' : '#FFF1F1', textAlign: 'center', transition: 'border-color .2s ease' }}>
+                  <Upload s={22} c={v.proofStatus === 'error' ? '#A8442E' : '#5A6B4B'} w={1.6} />
+                  <span style={{ font: "600 12.5px 'Manrope',sans-serif", color: v.proofStatus === 'error' ? '#A8442E' : '#2E3627' }}>{v.proofStatus === 'error' ? 'Upload failed — choose another file' : 'Click to upload receipt'}</span>
+                  <span style={{ font: "400 10.5px 'Manrope',sans-serif", color: '#99A18C' }}>PDF, PNG, JPG or WebP · max 5 MB</span>
+                  <input type="file" accept=".pdf,.png,.jpg,.jpeg,.webp,application/pdf,image/png,image/jpeg,image/webp" onChange={v.onProofFile} style={{ display: 'none' }} />
+                </label>
               )}
             </div>
-            <Box as="span" onClick={v.submitOrder} style={v.submitOrderStyle} hover="background:#8A9E76">Submit order</Box>
+            <Box as="span" onClick={v.submitOrder} style={v.submitOrderStyle} hover="background:#8A9E76">{v.submitLabel}</Box>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 12, padding: '9px 12px', background: 'rgba(90,107,75,.07)', border: '1px dashed rgba(90,107,75,.35)', borderRadius: 10 }}>
               <span style={{ font: "400 11px/1.5 'Manrope',sans-serif", color: '#78826B', flex: 1 }}>Demo shortcut — fills shipping + attaches a sample receipt and submits.</span>
               <Box as="span" onClick={v.simulatePayment} style="white-space:nowrap;font:600 11px 'Manrope',sans-serif;color:#FFFFFF;background:#9EAF8B;padding:8px 14px;border-radius:999px;cursor:pointer;transition:all .2s ease" hover="background:#8A9E76">⚡ Simulate</Box>
@@ -162,7 +167,7 @@ export function CancelModal() {
           </div>
           <div style={{ display: 'flex', gap: 10, marginTop: 4 }}>
             <Box as="span" onClick={v.cancelKeep} style="flex:1;display:block;text-align:center;font:600 13px 'Manrope',sans-serif;padding:14px;border-radius:999px;color:#2E3627;background:#fff;border:1.5px solid rgba(45,53,39,.16);cursor:pointer;transition:all .2s ease" hover="border-color:rgba(45,53,39,.4)">Keep order</Box>
-            <Box as="span" onClick={v.cancelConfirm} style="flex:1;display:block;text-align:center;font:600 13px 'Manrope',sans-serif;padding:14px;border-radius:999px;color:#2E3627;background:#A8442E;cursor:pointer;transition:all .2s ease" hover="background:#8E3626">Confirm cancel</Box>
+            <Box as="span" onClick={v.cancelConfirm} style="flex:1;display:block;text-align:center;font:600 13px 'Manrope',sans-serif;padding:14px;border-radius:999px;color:#FFFFFF;background:#A8442E;cursor:pointer;transition:all .2s ease" hover="background:#8E3626">{v.cancelBusy ? 'Cancelling…' : 'Confirm cancel'}</Box>
           </div>
         </div>
       </Box>
@@ -214,7 +219,7 @@ export function EditOrderModal() {
           </div>
           <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 16, paddingTop: 13, borderTop: '1px solid rgba(45,53,39,.09)', font: "600 15px 'Manrope',sans-serif" }}><span>New total</span><span style={{ fontFamily: "'Space Mono',monospace" }}>{v.editTotalStr}</span></div>
           <p style={{ margin: '10px 0 0', font: "400 10.5px/1.6 'Space Mono',monospace", color: '#99A18C' }}>Quantity changes sync with inventory automatically.</p>
-          <Box as="span" onClick={v.saveEdit} style={v.editSaveStyle} hover="background:#8A9E76">Save changes</Box>
+          <Box as="span" onClick={v.saveEdit} style={v.editSaveStyle} hover="background:#8A9E76">{v.editBusy ? 'Saving…' : 'Save changes'}</Box>
         </div>
       </Box>
     </Box>
@@ -288,37 +293,31 @@ export function EditInventoryModal() {
   );
 }
 
-// =================== PROOF RECEIPT MODAL ===================
+// =================== PROOF-OF-PAYMENT MODAL ===================
+// Streams the REAL uploaded bytes from GET /api/proofs/{orderId}. The same-origin
+// session cookie rides along automatically, so the authenticated iframe/link
+// renders (or downloads) exactly what the customer uploaded.
 export function ProofModal() {
   const v = usePortal();
   if (!v.showProof) return null;
-  const r = v.proofReceipt;
+  const r = v.proofView;
   return (
     <Box onClick={v.closeProof} style={OVERLAY + ';z-index:86'}>
-      <Box onClick={v.stopProp} style={SHEET.replace('width:464px', 'width:420px')}>
+      <Box onClick={v.stopProp} style={SHEET.replace('width:464px', 'width:560px')}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '18px 24px', borderBottom: '1px solid rgba(45,53,39,.09)' }}>
-          <span style={{ font: "600 13.5px 'Manrope',sans-serif" }}>Payment receipt</span>
+          <span style={{ font: "600 13.5px 'Manrope',sans-serif" }}>Proof of payment <span style={{ fontFamily: "'Space Mono',monospace", color: '#78826B' }}>· {r.ref}</span></span>
           <Box as="span" onClick={v.closeProof} style={HEADCLOSE} hover="color:#2E3627">×</Box>
         </div>
-        <div style={{ padding: '22px 24px 26px' }}>
-          <div style={{ background: '#fff', border: '1px solid rgba(45,53,39,.12)', borderRadius: 12, padding: 20, boxShadow: '0 8px 24px -18px rgba(45,53,39,.5)' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 12, paddingBottom: 14, borderBottom: '1px dashed rgba(45,53,39,.18)' }}>
-              <div>
-                <div style={{ font: "600 15px 'Spectral',serif", color: '#2E3627' }}>{r.bank}</div>
-                <div style={{ font: "500 9px 'Space Mono',monospace", letterSpacing: '.14em', textTransform: 'uppercase', color: '#5A6B4B', marginTop: 4 }}>Transfer confirmation</div>
-              </div>
-              <CheckMark s={26} c="#3E7C5B" w={1.7} />
-            </div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', padding: '9px 0', font: "500 12.5px 'Manrope',sans-serif" }}><span style={{ color: '#99A18C' }}>Reference</span><span style={{ fontFamily: "'Space Mono',monospace", color: '#2E3627' }}>{r.ref}</span></div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', padding: '9px 0', font: "500 12.5px 'Manrope',sans-serif", borderTop: '1px solid rgba(45,53,39,.07)' }}><span style={{ color: '#99A18C' }}>Payer</span><span style={{ color: '#2E3627' }}>{r.payer}</span></div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', padding: '9px 0', font: "500 12.5px 'Manrope',sans-serif", borderTop: '1px solid rgba(45,53,39,.07)' }}><span style={{ color: '#99A18C' }}>Date</span><span style={{ color: '#2E3627' }}>{r.date}</span></div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', padding: '12px 0 0', marginTop: 6, borderTop: '1px solid rgba(45,53,39,.12)', font: "600 15px 'Manrope',sans-serif" }}><span>Amount</span><span style={{ fontFamily: "'Space Mono',monospace" }}>{r.amount}</span></div>
-          </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 9, marginTop: 14 }}>
+        <div style={{ padding: '18px 24px 22px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 9, marginBottom: 12 }}>
             <FileIcon s={14} c="#4A5540" w={1.7} />
-            <span style={{ font: "500 12px 'Manrope',sans-serif", color: '#2E3627' }}>{r.file}</span>
+            <span style={{ flex: 1, minWidth: 0, font: "500 12px 'Manrope',sans-serif", color: '#2E3627', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{r.file}</span>
+            <a href={r.src} target="_blank" rel="noopener noreferrer" style={{ font: "600 11px 'Manrope',sans-serif", color: '#5A6B4B', textDecoration: 'none', whiteSpace: 'nowrap' }}>Open in new tab →</a>
           </div>
-          <p style={{ margin: '16px 0 0', font: "400 10px/1.6 'Space Mono',monospace", color: '#99A18C', textAlign: 'center' }}>Simulated document for demonstration. No live banking data is shown.</p>
+          <div style={{ border: '1px solid rgba(45,53,39,.14)', borderRadius: 12, overflow: 'hidden', background: '#F4EEE9' }}>
+            <iframe title={`Proof of payment ${r.ref}`} src={r.src} style={{ width: '100%', height: '62vh', border: 'none', display: 'block', background: '#fff' }} />
+          </div>
+          <p style={{ margin: '14px 0 0', font: "400 10px/1.6 'Space Mono',monospace", color: '#99A18C', textAlign: 'center' }}>The document the customer uploaded, served securely from this session. If it does not render, use “Open in new tab”.</p>
           <Box as="span" onClick={v.closeProof} style="display:block;text-align:center;margin-top:14px;font:600 13px 'Manrope',sans-serif;padding:13px;border-radius:999px;color:#FFFFFF;background:#9EAF8B;cursor:pointer;transition:all .2s ease" hover="background:#8A9E76">Close</Box>
         </div>
       </Box>

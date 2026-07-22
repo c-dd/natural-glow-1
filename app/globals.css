@@ -157,6 +157,7 @@ input:focus,textarea:focus{outline:none;border-color:#5A6B4B !important}
 @keyframes ngMenuFade{from{opacity:0}}
 @keyframes ngMenuSheet{from{opacity:0;transform:translateY(-10px)}}
 @keyframes ngSheetUp{from{transform:translateY(100%)}}
+@keyframes ngSpin{to{transform:rotate(360deg)}}
 .ng-auth{display:grid;grid-template-columns:1.05fr .95fr;min-height:100vh}
 .ng-auth-mobilelogo{display:none}
 .ng-hamburger{display:none}
