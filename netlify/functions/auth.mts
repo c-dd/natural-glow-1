@@ -16,10 +16,18 @@
 // index — conditional writes are NOT usable in prod (see the BINDING spike
 // verdict), so the residual same-millisecond duplicate-signup race is accepted.
 //
-// ADMIN_EMAILS bootstrap: on signup AND on successful login, an email on the
-// allowlist is promoted to role:'admin' on its stored doc. The response role is
-// always the EFFECTIVE role (publicUser()). passwordHash / lockout counters are
-// never serialized.
+// ADMIN_EMAILS role SYNC: on signup, on successful login, AND on /api/auth/me,
+// the stored role is reconciled to the allowlist — email ON the list -> 'admin'
+// (promote), email NOT on the list -> 'user' (DEMOTE). This is the single source
+// of truth for role, so any signup not on ADMIN_EMAILS is always a normal
+// account, and a stale admin (e.g. an account created under an email later
+// removed from ADMIN_EMAILS) loses access on its next login or /me refresh.
+//
+// NOTE: the session JWT also carries `role`. An already-issued token keeps its
+// old role until it expires (7d) or is refreshed; a demotion therefore takes
+// full effect at the NEXT login or /me, when syncRole() reissues the cookie with
+// the corrected claim. The response role is always the EFFECTIVE role
+// (publicUser()). passwordHash / lockout counters are never serialized.
 // ===========================================================================
 
 import { z } from 'zod';
@@ -74,6 +82,13 @@ function actionOf(req: Request): string {
   return path.split('/').pop() || '';
 }
 
+// The role the stored doc SHOULD carry given the current ADMIN_EMAILS allowlist.
+// On the list -> 'admin' (promote); off it -> 'user' (demote). One authority for
+// role; applied on signup, login, and /me so promotion AND demotion both persist.
+function syncedRole(emailLower: string): 'admin' | 'user' {
+  return isAdminEmail(emailLower) ? 'admin' : 'user';
+}
+
 async function sessionResponse(user: UserDoc, status: number): Promise<Response> {
   const role = effectiveRole({ role: user.role, email: user.email });
   const token = await signSession({ sub: user.id, role, email: user.email });
@@ -90,7 +105,7 @@ async function handleSignup(req: Request): Promise<Response> {
     throw new HttpError(409, 'EMAIL_EXISTS', 'An account with this email already exists');
   }
 
-  const role = isAdminEmail(emailLower) ? 'admin' : 'user';
+  const role = syncedRole(emailLower);
   const user = newUserDoc({
     email: emailLower,
     passwordHash: hashPassword(password),
@@ -135,8 +150,11 @@ async function handleLogin(req: Request): Promise<Response> {
     throw new HttpError(401, 'INVALID_CREDENTIALS', 'Incorrect email or password');
   }
 
-  // Success: reset counters + apply ADMIN_EMAILS bootstrap.
-  const role = isAdminEmail(emailLower) ? 'admin' : user.role;
+  // Success: reset counters + SYNC role to ADMIN_EMAILS (promote AND demote).
+  // Using syncedRole (not the old promote-only `isAdminEmail ? admin : user.role`)
+  // means a stale stored admin whose email is no longer on the list is demoted to
+  // 'user' here — persisted to the doc AND carried into the reissued cookie.
+  const role = syncedRole(emailLower);
   const updated: UserDoc = {
     ...user,
     role,
@@ -160,6 +178,17 @@ async function handleMe(req: Request): Promise<Response> {
   const claims = await requireUser(req); // throws 401 when unauthenticated
   const user = await readUserById(claims.sub);
   if (!user) throw unauthorized('Session no longer valid');
+
+  // /me re-reads the doc, so it is the natural refresh point to SYNC the role to
+  // ADMIN_EMAILS (promote AND demote). If the stored role is stale, persist the
+  // corrected role and reissue the cookie so the JWT claim matches — this is how
+  // a demotion (email removed from ADMIN_EMAILS) takes effect on session refresh.
+  const desired = syncedRole(user.email);
+  if (desired !== user.role) {
+    const updated: UserDoc = { ...user, role: desired };
+    await writeUser(updated);
+    return sessionResponse(updated, 200);
+  }
   return json({ user: publicUser(user) });
 }
 

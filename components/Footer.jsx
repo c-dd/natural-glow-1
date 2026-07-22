@@ -54,20 +54,23 @@ export default function Footer() {
             </Box>
             <Box as="div" style="padding:22px 26px 26px">
               <Box as="div" style="font:500 9px 'Space Mono',monospace;letter-spacing:.2em;text-transform:uppercase;color:#5A6B4B;margin-bottom:14px">For Research Use Only</Box>
+              {/* CLIENT / COUNSEL: placeholder legal summary. Have the operator's
+                  legal counsel review and replace before launch. */}
               {legal === 'terms' && (
                 <>
                   <Box as="p" style="margin:0 0 14px;font:400 13px/1.75 'Manrope',sans-serif;color:#4A5540">All products sold by Natural Glow are research-grade reference materials supplied strictly For Research Use Only (RUO). They are not drugs, foods, cosmetics, or medical devices, and are not intended for human or animal consumption, diagnosis, or treatment.</Box>
                   <Box as="p" style="margin:0 0 14px;font:400 13px/1.75 'Manrope',sans-serif;color:#4A5540">By placing an order you confirm that you are a qualified researcher or institution and that all materials will be handled by trained personnel in an appropriate laboratory setting, in compliance with applicable laws and regulations.</Box>
-                  <Box as="p" style="margin:0;font:400 13px/1.75 'Manrope',sans-serif;color:#4A5540">This is a demonstration storefront. Orders, payments, and certificates shown here are simulated and create no binding obligation.</Box>
+                  <Box as="p" style="margin:0;font:400 13px/1.75 'Manrope',sans-serif;color:#4A5540">Prices, availability, and Certificates of Analysis are provided in good faith and may change without notice. Nothing on this site constitutes an offer to sell where such sale would be prohibited by law.</Box>
                 </>
               )}
               {legal === 'privacy' && (
                 <>
                   <Box as="p" style="margin:0 0 14px;font:400 13px/1.75 'Manrope',sans-serif;color:#4A5540">We collect only the account and shipping details you provide, in order to process research orders and issue Certificates of Analysis. We do not sell your information.</Box>
-                  <Box as="p" style="margin:0 0 14px;font:400 13px/1.75 'Manrope',sans-serif;color:#4A5540">Account details in this demo are stored locally in your browser and are never transmitted to a server. Clearing your browser storage removes them.</Box>
-                  <Box as="p" style="margin:0;font:400 13px/1.75 'Manrope',sans-serif;color:#4A5540">This is a demonstration storefront. No real personal data is processed and no tracking is performed.</Box>
+                  <Box as="p" style="margin:0 0 14px;font:400 13px/1.75 'Manrope',sans-serif;color:#4A5540">The details you enter are transmitted securely and stored on our servers only to fulfil your orders and maintain your account, and are retained no longer than needed for those purposes and applicable record-keeping.</Box>
+                  <Box as="p" style="margin:0;font:400 13px/1.75 'Manrope',sans-serif;color:#4A5540">We use only the cookie required to keep you signed in. We do not run third-party advertising or analytics tracking.</Box>
                 </>
               )}
+              <Box as="p" style="margin:16px 0 0;font:400 10px/1.6 'Space Mono',monospace;color:#99A18C">Summary only — the full Terms of Use and Privacy Policy will govern. Placeholder text pending the operator's legal review.</Box>
               <Box as="span" onClick={() => setLegal(null)} style="display:block;text-align:center;margin-top:18px;font:600 13px 'Manrope',sans-serif;padding:13px;border-radius:999px;color:#FFFFFF;background:#9EAF8B;cursor:pointer;transition:all .2s ease" hover="background:#8A9E76">Close</Box>
             </Box>
           </Box>

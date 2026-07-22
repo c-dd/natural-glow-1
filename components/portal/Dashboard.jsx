@@ -45,15 +45,18 @@ function StatusStrip() {
 
 function CurrentView() {
   const v = usePortal();
-  if (v.viewAs === 'customer') {
-    if (v.dashView === 'catalog') return <CatalogView />;
-    if (v.dashView === 'myorders') return <MyOrdersView />;
-    if (v.dashView === 'orderdetail') return v.hasDetail ? <OrderDetailView /> : <MyOrdersView />;
+  // Role-locked rendering: viewAs is derived from the session role, so a customer
+  // can only ever reach customer views and an admin only admin views (+ the
+  // shared Account). Any out-of-role dashView falls through to the role default.
+  if (v.viewAs === 'admin') {
+    if (v.dashView === 'inventory') return <InventoryView />;
     if (v.dashView === 'account') return <AccountView />;
-    return <CatalogView />;
+    return <AdminOrdersView />; // default: 'orders'
   }
-  if (v.dashView === 'inventory') return <InventoryView />;
-  return <AdminOrdersView />;
+  if (v.dashView === 'myorders') return <MyOrdersView />;
+  if (v.dashView === 'orderdetail') return v.hasDetail ? <OrderDetailView /> : <MyOrdersView />;
+  if (v.dashView === 'account') return <AccountView />;
+  return <CatalogView />; // default: 'catalog'
 }
 
 export default function Dashboard() {

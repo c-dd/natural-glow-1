@@ -77,6 +77,78 @@ async function listAllOrders(req: Request): Promise<Response> {
 }
 
 // ---------------------------------------------------------------------------
+// GET /api/admin/orders/export.csv — shipping-label CSV for Pirate Ship's
+// "Upload a Spreadsheet" bulk import.
+//
+// Pirate Ship column research (2026-07-22, sources below): only Name, Address
+// (line 1), City, State, Zip are REQUIRED; all headers are user-mappable at
+// import time ("field mapping"). Optional columns Pirate Ship recognises include
+// Address Line 2/3, Company, Country, Email, Phone, Order ID, weight & package
+// dimensions, and up to three "Rubber Stamp" corner fields. We emit the
+// template's canonical address headers plus an Order ID column (an optional
+// column Pirate Ship maps to the label / passthrough) so the warehouse can print
+// labels directly from a placed order.
+//   Sources:
+//     https://www.pirateship.com/integrations/spreadsheets
+//     https://support.pirateship.com/en/articles/1068428-how-do-i-upload-address-spreadsheets-into-pirate-ship
+//
+// Field map (STRUCTURED shipping fields ONLY — never the display `address`
+// string, which embeds newlines):
+//   shipping.name  -> Name            shipping.city  -> City
+//   shipping.addr1 -> Address Line 1  shipping.state -> State
+//   (no addr2 yet) -> Address Line 2  shipping.zip   -> Zip
+//   order.id       -> Order ID
+// US-only for now, so no Country column. RFC-4180 escaping (a cell containing a
+// comma / double-quote / CR / LF is wrapped in double-quotes and embedded quotes
+// are doubled); CRLF row terminators.
+//
+// ?status defaults to Processing (the fulfilment queue). ?status=all exports
+// every non-cancelled order (Processing + Shipped); an explicit Shipped or
+// Cancelled value filters to exactly that status.
+// ---------------------------------------------------------------------------
+const CSV_COLUMNS = ['Name', 'Address Line 1', 'Address Line 2', 'City', 'State', 'Zip', 'Order ID'];
+
+function csvCell(value: unknown): string {
+  const s = value == null ? '' : String(value);
+  return /[",\r\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
+}
+
+function csvRow(cells: unknown[]): string {
+  return cells.map(csvCell).join(',');
+}
+
+async function exportOrdersCsv(req: Request): Promise<Response> {
+  await requireAdmin(req);
+  const status = new URL(req.url).searchParams.get('status') || 'Processing';
+  const all = await listOrders(ALL_ORDERS_PREFIX);
+  const rows = all.filter((o) => {
+    if (status === 'all') return o.status !== 'Cancelled';
+    if (status === 'Shipped' || status === 'Cancelled') return o.status === status;
+    return o.status === 'Processing';
+  });
+
+  const lines = [csvRow(CSV_COLUMNS)];
+  for (const o of rows) {
+    const s = (o.shipping || {}) as Partial<OrderDoc['shipping']>;
+    lines.push(
+      csvRow([s.name || o.customer || '', s.addr1 || '', '', s.city || '', s.state || '', s.zip || '', o.id]),
+    );
+  }
+  // RFC-4180 uses CRLF; the trailing newline keeps the final record well-formed.
+  const body = lines.join('\r\n') + '\r\n';
+
+  const date = new Date().toISOString().slice(0, 10); // YYYY-MM-DD (UTC)
+  return new Response(body, {
+    status: 200,
+    headers: {
+      'content-type': 'text/csv; charset=utf-8',
+      'content-disposition': `attachment; filename="natural-glow-orders-${date}.csv"`,
+      'cache-control': 'no-store',
+    },
+  });
+}
+
+// ---------------------------------------------------------------------------
 // POST /api/admin/orders/:id/ship
 // ---------------------------------------------------------------------------
 async function shipOrder(req: Request, id: string): Promise<Response> {
@@ -188,6 +260,13 @@ export default withErrors(async (req: Request) => {
     return listAllOrders(req);
   }
 
+  // Must precede the generic /:id match below (export.csv would otherwise be
+  // read as an order id and rejected 405 by the PATCH-only item route).
+  if (path === '/api/admin/orders/export.csv') {
+    methodGuard(req, ['GET']);
+    return exportOrdersCsv(req);
+  }
+
   const shipMatch = path.match(/^\/api\/admin\/orders\/([^/]+)\/ship$/);
   if (shipMatch) {
     methodGuard(req, ['POST']);
@@ -212,6 +291,7 @@ export default withErrors(async (req: Request) => {
 export const config = {
   path: [
     '/api/admin/orders',
+    '/api/admin/orders/export.csv',
     '/api/admin/orders/:id',
     '/api/admin/orders/:id/ship',
     '/api/admin/orders/:id/cancel',

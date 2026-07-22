@@ -1,8 +1,38 @@
 'use client';
 
+import { useState } from 'react';
 import { Box } from '@/components/Box';
 import { usePortal } from './PortalContext';
 import { Search, FileIcon } from './icons';
+
+// Copy a label-ready block (name\naddr1\ncity, ST zip) to the clipboard. The
+// admin order card exposes `o.name` (recipient) and `o.address` — the display
+// string derived from the STRUCTURED shipping fields (deriveAddress →
+// `addr1\ncity, ST zip`), so the two joined ARE the label block. Falls back to a
+// hidden textarea + execCommand when the async Clipboard API is unavailable
+// (older browser / non-secure context).
+async function copyLabelBlock(text) {
+  try {
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      await navigator.clipboard.writeText(text);
+      return true;
+    }
+  } catch { /* fall through to the legacy path */ }
+  try {
+    const ta = document.createElement('textarea');
+    ta.value = text;
+    ta.setAttribute('readonly', '');
+    ta.style.position = 'fixed';
+    ta.style.opacity = '0';
+    document.body.appendChild(ta);
+    ta.select();
+    const ok = document.execCommand('copy');
+    document.body.removeChild(ta);
+    return ok;
+  } catch {
+    return false;
+  }
+}
 
 const Stat = ({ value, label, color }) => (
   <div style={{ background: '#fff', border: '1px solid rgba(45,53,39,.1)', borderRadius: 13, padding: 20 }}>
@@ -14,10 +44,29 @@ const Stat = ({ value, label, color }) => (
 // =================== ADMIN ORDERS ===================
 export function AdminOrdersView() {
   const v = usePortal();
+  // Local-only "Copied ✓" state, keyed by order id (no PortalContext changes).
+  const [copiedId, setCopiedId] = useState('');
+  const copyAddr = async (o) => {
+    const block = `${o.name}\n${o.address}`; // name\naddr1\ncity, ST zip
+    if (await copyLabelBlock(block)) {
+      setCopiedId(o.id);
+      setTimeout(() => setCopiedId((cur) => (cur === o.id ? '' : cur)), 1600);
+    }
+  };
   return (
     <div className="ng-dashpad" style={{ padding: '44px 48px', maxWidth: 1060, animation: 'ngRise .45s cubic-bezier(.2,.7,.2,1)' }}>
-      <div style={{ font: "500 10px 'Space Mono',monospace", letterSpacing: '.22em', textTransform: 'uppercase', color: '#5A6B4B', marginBottom: 10 }}>Admin</div>
-      <h1 style={{ margin: 0, font: "300 clamp(28px,3vw,40px)/1.05 'Spectral',serif" }}>Orders</h1>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', gap: 20, flexWrap: 'wrap' }}>
+        <div>
+          <div style={{ font: "500 10px 'Space Mono',monospace", letterSpacing: '.22em', textTransform: 'uppercase', color: '#5A6B4B', marginBottom: 10 }}>Admin</div>
+          <h1 style={{ margin: 0, font: "300 clamp(28px,3vw,40px)/1.05 'Spectral',serif" }}>Orders</h1>
+        </div>
+        {/* Direct download — the ng_session cookie rides along same-origin, so no
+            JS fetch/busy state is needed. Shown only when there are Processing
+            orders to fulfil. */}
+        {v.statOpen > 0 && (
+          <Box as="a" href="/api/admin/orders/export.csv" download style="font:600 12.5px 'Manrope',sans-serif;color:#FFFFFF;background:#9EAF8B;padding:13px 24px;border-radius:999px;cursor:pointer;text-decoration:none;transition:all .2s ease" hover="background:#8A9E76;transform:translateY(-1px)">Export for labels (CSV)</Box>
+        )}
+      </div>
 
       <div className="ng-dash-stats" style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 16, margin: '24px 0' }}>
         <Stat value={v.statOpen} label="Processing" />
@@ -43,7 +92,10 @@ export function AdminOrdersView() {
             </div>
             <div className="ng-ordergrid" style={{ display: 'grid', gridTemplateColumns: '1.05fr 1fr', gap: 26, padding: '18px 22px' }}>
               <div>
-                <div style={{ font: "500 9px 'Space Mono',monospace", letterSpacing: '.16em', textTransform: 'uppercase', color: '#5A6B4B', marginBottom: 9 }}>Ship to</div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 9 }}>
+                  <span style={{ font: "500 9px 'Space Mono',monospace", letterSpacing: '.16em', textTransform: 'uppercase', color: '#5A6B4B' }}>Ship to</span>
+                  <span onClick={() => copyAddr(o)} style={{ font: "600 9px 'Space Mono',monospace", letterSpacing: '.1em', textTransform: 'uppercase', color: copiedId === o.id ? '#3E7C5B' : '#99A18C', cursor: 'pointer', transition: 'color .2s ease' }}>{copiedId === o.id ? 'Copied ✓' : 'Copy address'}</span>
+                </div>
                 <div style={{ font: "600 15px 'Manrope',sans-serif", color: '#2E3627' }}>{o.name}</div>
                 <div style={{ font: "400 13px/1.65 'Manrope',sans-serif", color: '#4A5540', whiteSpace: 'pre-line', marginTop: 5 }}>{o.address}</div>
               </div>

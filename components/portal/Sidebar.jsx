@@ -17,15 +17,10 @@ export default function Sidebar() {
         <RUO />
       </Box>
 
-      {/* Customer | Admin segmented toggle — admins only */}
-      {v.isAdmin ? (
-        <div style={{ display: 'flex', background: 'rgba(255,255,255,.14)', border: '1px solid rgba(255,255,255,.18)', borderRadius: 999, padding: 3, margin: '22px 8px 26px' }}>
-          <span onClick={v.setCustomer} style={{ flex: 1, textAlign: 'center', font: "600 10.5px 'Manrope',sans-serif", padding: 7, borderRadius: 999, cursor: 'pointer', background: customer ? '#FFDFE0' : 'transparent', color: customer ? '#2E3627' : 'rgba(255,255,255,.75)' }}>Customer</span>
-          <span onClick={v.setAdmin} style={{ flex: 1, textAlign: 'center', font: "600 10.5px 'Manrope',sans-serif", padding: 7, borderRadius: 999, cursor: 'pointer', background: customer ? 'transparent' : '#FFDFE0', color: customer ? 'rgba(255,255,255,.75)' : '#2E3627' }}>Admin</span>
-        </div>
-      ) : (
-        <div style={{ height: 26 }} />
-      )}
+      {/* Role-locked nav — no Customer/Admin toggle. viewAs is derived from the
+          session role: admins never see the shopping surfaces; customers never
+          see admin surfaces. */}
+      <div style={{ height: 26 }} />
 
       {customer ? (
         <div className="ng-side-nav" style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
@@ -37,6 +32,7 @@ export default function Sidebar() {
         <div className="ng-side-nav" style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
           <Box as="span" onClick={v.goAdmOrders} style={v.sideAdmOrders} hover="color:#FFFFFF">Orders</Box>
           <Box as="span" onClick={v.goAdmInventory} style={v.sideAdmInventory} hover="color:#FFFFFF">Inventory</Box>
+          <Box as="span" onClick={v.goAccount} style={v.sideAccount} hover="color:#FFFFFF">Account</Box>
         </div>
       )}
 

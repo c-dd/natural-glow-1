@@ -4,6 +4,7 @@ import { Box } from '@/components/Box';
 import { usePortal } from './PortalContext';
 import { Field, Area } from './Field';
 import { Upload, FileIcon } from './icons';
+import { BANK_DETAILS } from '@/lib/bankDetails';
 
 const OVERLAY = 'position:fixed;inset:0;background:rgba(45,53,39,.48);backdrop-filter:blur(4px);display:flex;align-items:center;justify-content:center;padding:20px;animation:ngFade .3s ease';
 const SHEET = 'width:464px;max-width:100%;max-height:88vh;overflow:auto;background:#FFFFFF;border:1px solid rgba(45,53,39,.13);border-radius:18px;box-shadow:0 44px 90px -30px rgba(45,53,39,.65);animation:ngPop .4s cubic-bezier(.2,.7,.2,1)';
@@ -89,11 +90,11 @@ export function CartPopup() {
             </div>
             <p style={{ margin: '16px 0 10px', font: "400 12.5px/1.65 'Manrope',sans-serif", color: '#4A5540' }}>Send payment by bank transfer using the details below, then upload your proof of payment. Orders ship once payment is verified.</p>
             <div style={{ background: '#fff', border: '1px solid rgba(45,53,39,.11)', borderRadius: 11, padding: '14px 17px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', font: "500 12px 'Manrope',sans-serif", padding: '4px 0' }}><span style={{ color: '#78826B' }}>Bank</span><span style={{ color: '#2E3627' }}>Pacific Commerce Bank</span></div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', font: "500 12px 'Manrope',sans-serif", padding: '4px 0' }}><span style={{ color: '#78826B' }}>Account name</span><span style={{ color: '#2E3627' }}>Natural Glow Research LLC</span></div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', font: "500 12px 'Manrope',sans-serif", padding: '4px 0' }}><span style={{ color: '#78826B' }}>Account no.</span><span style={{ fontFamily: "'Space Mono',monospace", color: '#2E3627' }}>8830 4471 2290</span></div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', font: "500 12px 'Manrope',sans-serif", padding: '4px 0' }}><span style={{ color: '#78826B' }}>Routing</span><span style={{ fontFamily: "'Space Mono',monospace", color: '#2E3627' }}>122000247</span></div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', font: "500 12px 'Manrope',sans-serif", padding: '8px 0 4px', borderTop: '1px solid rgba(45,53,39,.08)', marginTop: 4 }}><span style={{ color: '#78826B' }}>Reference</span><span style={{ color: '#5A6B4B' }}>Your full name</span></div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', font: "500 12px 'Manrope',sans-serif", padding: '4px 0' }}><span style={{ color: '#78826B' }}>Bank</span><span style={{ color: '#2E3627' }}>{BANK_DETAILS.bankName}</span></div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', font: "500 12px 'Manrope',sans-serif", padding: '4px 0' }}><span style={{ color: '#78826B' }}>Account name</span><span style={{ color: '#2E3627' }}>{BANK_DETAILS.accountName}</span></div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', font: "500 12px 'Manrope',sans-serif", padding: '4px 0' }}><span style={{ color: '#78826B' }}>Account no.</span><span style={{ fontFamily: "'Space Mono',monospace", color: '#2E3627' }}>{BANK_DETAILS.accountNumber}</span></div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', font: "500 12px 'Manrope',sans-serif", padding: '4px 0' }}><span style={{ color: '#78826B' }}>Routing</span><span style={{ fontFamily: "'Space Mono',monospace", color: '#2E3627' }}>{BANK_DETAILS.routing}</span></div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', font: "500 12px 'Manrope',sans-serif", padding: '8px 0 4px', borderTop: '1px solid rgba(45,53,39,.08)', marginTop: 4 }}><span style={{ color: '#78826B' }}>Reference</span><span style={{ color: '#5A6B4B' }}>{BANK_DETAILS.reference}</span></div>
             </div>
             <div style={{ marginTop: 14 }}>
               <div style={{ font: "500 9px 'Space Mono',monospace", letterSpacing: '.1em', textTransform: 'uppercase', color: '#78826B', marginBottom: 7 }}>Proof of payment</div>
@@ -118,10 +119,6 @@ export function CartPopup() {
               )}
             </div>
             <Box as="span" onClick={v.submitOrder} style={v.submitOrderStyle} hover="background:#8A9E76">{v.submitLabel}</Box>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 12, padding: '9px 12px', background: 'rgba(90,107,75,.07)', border: '1px dashed rgba(90,107,75,.35)', borderRadius: 10 }}>
-              <span style={{ font: "400 11px/1.5 'Manrope',sans-serif", color: '#78826B', flex: 1 }}>Demo shortcut — fills shipping + attaches a sample receipt and submits.</span>
-              <Box as="span" onClick={v.simulatePayment} style="white-space:nowrap;font:600 11px 'Manrope',sans-serif;color:#FFFFFF;background:#9EAF8B;padding:8px 14px;border-radius:999px;cursor:pointer;transition:all .2s ease" hover="background:#8A9E76">⚡ Simulate</Box>
-            </div>
           </div>
         )}
 

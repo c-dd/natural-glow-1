@@ -49,8 +49,13 @@ export function PortalProvider({ children }) {
   const isMobile = useMobile(760);
 
   // ---- session / role (admin gating rides on the confirmed /me response) ----
+  // Resolve the role synchronously from the confirmed session singleton so the
+  // role-locked UI is correct on the very FIRST render: useSession's React state
+  // lags one frame behind readSessionUser(), which already reflects the /me
+  // confirmation the dashboard guard performed before mounting this provider.
+  // The server (requireAdmin) remains the true gate — this only drives the UI.
   const session = useSession();
-  const role = (session.user && session.user.role) || 'user';
+  const role = (session.user && session.user.role) || (readSessionUser() || {}).role || 'user';
   const isAdmin = role === 'admin';
 
   // ---- global stores ----
@@ -77,8 +82,15 @@ export function PortalProvider({ children }) {
   const adminOrderById = (id) => adminOrders.find((x) => x.id === id);
 
   // ---- local UI state ----
-  const [viewAs, setViewAs] = useState('customer');
-  const [dashView, setDashView] = useState('catalog');
+  // viewAs is DERIVED from the session role and is NOT user-switchable: admin
+  // gets the admin experience, everyone else the customer experience. The old
+  // Customer/Admin toggle is gone (established client rule: admin never shops).
+  const viewAs = isAdmin ? 'admin' : 'customer';
+  // Default landing view by role: admin -> 'orders', customer -> 'catalog'.
+  // Seeded from the confirmed session singleton so admins never flash the
+  // customer catalog on first paint; a deep-link (below) can override it.
+  const [dashView, setDashView] = useState(() =>
+    (((readSessionUser() || {}).role) === 'admin' ? 'orders' : 'catalog'));
   const [orderDetailId, setOrderDetailId] = useState(null);
   const [dashSearch, setDashSearch] = useState('');
   const [dashNav, setDashNav] = useState(false);
@@ -152,27 +164,37 @@ export function PortalProvider({ children }) {
     setAcctPwCur(''); setAcctPwNew(''); setAcctPwConf('');
   };
 
-  // ---- deep link: ?view= and ?cart=1 ----
+  // ---- deep link: ?view= and ?cart=1 (role-locked) ----
   // The session is already confirmed by the dashboard guard before this mounts,
-  // so readSessionUser() reflects the real role — admin views are gated on it.
+  // so readSessionUser() reflects the real role. A ?view= deep-link is honored
+  // ONLY if it names a view permitted for the caller's role; any other value
+  // (an admin view for a customer, a customer view for an admin) maps to that
+  // role's default landing view instead. ?cart=1 is customer-only (admin never
+  // shops), so it is ignored for admins.
   useEffect(() => {
     const admin = ((readSessionUser() || {}).role) === 'admin';
+    const roleDefault = admin ? 'orders' : 'catalog';
+    const allowed = admin
+      ? { orders: 1, inventory: 1, account: 1 }
+      : { catalog: 1, myorders: 1, account: 1 };
     const params = new URLSearchParams(window.location.search);
     const view = params.get('view');
-    if (view === 'orders' || view === 'inventory') {
-      if (admin) { setViewAs('admin'); setDashView(view); }
-      else { setViewAs('customer'); setDashView('catalog'); }
-    }
-    else if (view === 'catalog' || view === 'myorders') { setViewAs('customer'); setDashView(view); }
-    else if (view === 'account') { setViewAs('customer'); setDashView('account'); populateAccount(); }
-    if (params.get('cart') === '1') { setCartOpen(true); setCheckoutStep('cart'); }
+    const target = view && allowed[view] ? view : roleDefault;
+    setDashView(target);
+    if (target === 'account') populateAccount();
+    if (!admin && params.get('cart') === '1') { setCartOpen(true); setCheckoutStep('cart'); }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Safety net: if the confirmed session is NOT admin, never leave the UI in an
-  // admin view (e.g. an optimistic hint that the API later downgrades).
+  // Safety net: if the confirmed role ever changes mid-session (e.g. a demotion
+  // picked up on a /me refresh), snap to that role's default whenever the current
+  // view is not valid for the new role. viewAs itself is derived, so it always
+  // tracks the role; this only guards a now-invalid dashView from lingering.
   useEffect(() => {
-    if (!isAdmin && viewAs === 'admin') { setViewAs('customer'); setDashView('catalog'); }
+    const allowed = isAdmin
+      ? ['orders', 'inventory', 'account']
+      : ['catalog', 'myorders', 'orderdetail', 'account'];
+    setDashView((cur) => (allowed.includes(cur) ? cur : (isAdmin ? 'orders' : 'catalog')));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isAdmin]);
 
@@ -205,8 +227,9 @@ export function PortalProvider({ children }) {
     router.push('/');
   };
 
-  const setCustomer = () => { setViewAs('customer'); setDashView('catalog'); };
-  const setAdmin = () => { if (!isAdmin) return; setViewAs('admin'); setDashView('orders'); };
+  // Role-locked navigation. viewAs is derived from the session role, so these no
+  // longer switch roles — they only move within the current role's own views.
+  // (The Customer/Admin toggle and its setCustomer/setAdmin are removed.)
   const goCustCatalog = () => setDashView('catalog');
   const goCustOrders = () => setDashView('myorders');
   const goAdmOrders = () => setDashView('orders');
@@ -214,11 +237,11 @@ export function PortalProvider({ children }) {
   const goAccount = () => { populateAccount(); setDashView('account'); scrollTop(); };
   const backToOrders = () => setDashView('myorders');
 
-  const drawerCustCatalog = () => { setViewAs('customer'); setDashView('catalog'); setDashNav(false); };
-  const drawerCustOrders = () => { setViewAs('customer'); setDashView('myorders'); setDashNav(false); };
-  const drawerAdmOrders = () => { setViewAs('admin'); setDashView('orders'); setDashNav(false); };
-  const drawerAdmInventory = () => { setViewAs('admin'); setDashView('inventory'); setDashNav(false); };
-  const drawerAccount = () => { populateAccount(); setViewAs('customer'); setDashView('account'); setDashNav(false); scrollTop(); };
+  const drawerCustCatalog = () => { setDashView('catalog'); setDashNav(false); };
+  const drawerCustOrders = () => { setDashView('myorders'); setDashNav(false); };
+  const drawerAdmOrders = () => { setDashView('orders'); setDashNav(false); };
+  const drawerAdmInventory = () => { setDashView('inventory'); setDashNav(false); };
+  const drawerAccount = () => { populateAccount(); setDashView('account'); setDashNav(false); scrollTop(); };
 
   const toggleDashNav = () => { setDashNav((x) => !x); setCartOpen(false); };
   const closeDashNav = () => setDashNav(false);
@@ -288,16 +311,6 @@ export function PortalProvider({ children }) {
     }
   };
   const submitOrder = () => doPlaceOrder();
-  // Demo shortcut: prefill shipping fields ONLY (WS6 removes the button). A real
-  // receipt file is still required to submit — no auto-submit, no fake proof.
-  const simulatePayment = () => {
-    setCoName((coName || '').trim() || account.name || 'Dr. Jane Okafor');
-    setCoAddr((coAddr || '').trim() || 'Institute of Molecular Research, 418 Marine Pkwy');
-    setCoCity((coCity || '').trim() || 'San Diego');
-    setCoState((coState || '').trim() || 'CA');
-    setCoZip((coZip || '').trim() || '92101');
-    toast('Shipping filled — attach a real receipt to submit');
-  };
   // Real upload on file select: idle → uploading → attached | error.
   const onProofFile = async (e) => {
     const f = e.target.files && e.target.files[0];
@@ -319,7 +332,7 @@ export function PortalProvider({ children }) {
     }
   };
   const clearProof = () => { setProofName(''); setProofKey(''); setProofStatus('idle'); };
-  const doneGoOrders = () => { setCartOpen(false); setCheckoutStep('cart'); setViewAs('customer'); setDashView('myorders'); };
+  const doneGoOrders = () => { setCartOpen(false); setCheckoutStep('cart'); setDashView('myorders'); };
 
   // ---- admin order actions ----
   const askCancel = (id) => { setCancelId(id); setCancelReason('Payment incorrect'); setCancelMsg(''); };
@@ -642,7 +655,7 @@ export function PortalProvider({ children }) {
   const v = {
     // layout / nav
     isMobile, viewAs, dashView, dashNav, goHome, goContact, logout, role, isAdmin,
-    setCustomer, setAdmin, goCustCatalog, goCustOrders, goAdmOrders, goAdmInventory, goAccount, backToOrders,
+    goCustCatalog, goCustOrders, goAdmOrders, goAdmInventory, goAccount, backToOrders,
     drawerCustCatalog, drawerCustOrders, drawerAdmOrders, drawerAdmInventory, drawerAccount,
     toggleDashNav, closeDashNav,
     dbarTop: `position:absolute;left:0;width:22px;height:1.6px;background:#FFFFFF;border-radius:1px;transition:transform .3s ease, top .3s ease;` + (dashNav ? `top:6px;transform:rotate(45deg);` : `top:3px;`),
@@ -654,7 +667,7 @@ export function PortalProvider({ children }) {
     sideAdmInventory: sideStyle(dashView === 'inventory'),
     mtabCatalog: mtabStyle(viewAs === 'customer' && dashView === 'catalog'),
     mtabOrders: mtabStyle(viewAs === 'customer' && (dashView === 'myorders' || dashView === 'orderdetail')),
-    mtabAccount: mtabStyle(viewAs === 'customer' && dashView === 'account'),
+    mtabAccount: mtabStyle(dashView === 'account'), // shared by both role tab strips
     mtabAdmOrders: mtabStyle(viewAs === 'admin' && dashView === 'orders'),
     mtabAdmInventory: mtabStyle(viewAs === 'admin' && dashView === 'inventory'),
     authName: account.name, authInitial: initials(account.name),
@@ -697,7 +710,7 @@ export function PortalProvider({ children }) {
     onCoName: (e) => setCoName(e.target.value), onCoAddr: (e) => setCoAddr(e.target.value), onCoCity: (e) => setCoCity(e.target.value), onCoState: (e) => setCoState(e.target.value), onCoZip: (e) => setCoZip(e.target.value),
     proofStatus, proofName, onProofFile, clearProof,
     submitOrderStyle, submitOrder, submitLabel: placing ? 'Placing order…' : 'Submit order',
-    placing, simulatePayment, lastOrderId, doneGoOrders,
+    placing, lastOrderId, doneGoOrders,
 
     // cancel modal
     cancelOpen: !!cancelId, cancelOrderId: cancelId, cancelReason, cancelMsg,

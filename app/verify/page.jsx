@@ -69,7 +69,7 @@ export default function VerifyPage() {
     record = {
       name: result.name, sub: result.sub, lot: result.lot,
       released, retest: released !== '—' ? retestFrom(released) : '—',
-      analyst: 'M. Reyes, QC', ref: 'COA-' + String(result.lot).replace(/[^A-Za-z0-9]+/g, '-') + '-A',
+      analyst: 'Quality Control', ref: 'COA-' + String(result.lot).replace(/[^A-Za-z0-9]+/g, '-') + '-A',
       rows: COA_ROWS,
     };
   }

@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { Box } from '@/components/Box';
-import { useGate, writeGate, useMobile } from '@/lib/store';
+import { useGate, writeGate } from '@/lib/store';
 
 // RUO age/use gate, ported 1:1 from the original single-file app.
 // While not entered, a full-screen overlay is shown and the page behind is
@@ -21,7 +21,6 @@ const ENTER_BASE =
 
 export default function Gate({ children }) {
   const entered = useGate(); // null (pre-hydration) | true | false
-  const mobile = useMobile();
   const [c1, setC1] = useState(false);
   const [c2, setC2] = useState(false);
   const [tried, setTried] = useState(false);
@@ -32,7 +31,6 @@ export default function Gate({ children }) {
   const exitUp = hydrated && !entered && left;
   const both = c1 && c2;
   const showHint = gateUp && tried && !both;
-  const showReset = hydrated && !(mobile && entered === true);
 
   const wrap =
     'transition:filter .55s ease, opacity .55s ease;' +
@@ -44,7 +42,6 @@ export default function Gate({ children }) {
   };
   const leave = () => setLeft(true);
   const backToGate = () => { setLeft(false); setTried(false); };
-  const reset = () => { writeGate(false); setLeft(false); setC1(false); setC2(false); setTried(false); };
 
   const enterStyle =
     ENTER_BASE +
@@ -100,11 +97,6 @@ export default function Gate({ children }) {
           <Box as="p" style="margin:14px 0 0;max-width:400px;font:400 13px/1.7 'Manrope',sans-serif;color:rgba(255,255,255,.75)">This site is restricted to verified researchers 21 and older. You may return if your details have changed.</Box>
           <Box as="span" onClick={backToGate} style="margin-top:28px;font:600 13px 'Manrope',sans-serif;color:#2E3627;background:#FFDFE0;padding:14px 28px;border-radius:999px;cursor:pointer;user-select:none;transition:all .2s ease" hover="transform:translateY(-1px)">Return to verification</Box>
         </Box>
-      )}
-
-      {/* demo reset */}
-      {showReset && (
-        <Box as="div" onClick={reset} style="position:fixed;right:16px;bottom:16px;z-index:95;font:500 10px 'Space Mono',monospace;letter-spacing:.08em;text-transform:uppercase;color:#6E7A64;background:rgba(255,255,255,.92);border:1px solid rgba(45,53,39,.15);padding:8px 13px;border-radius:999px;cursor:pointer;user-select:none;box-shadow:0 4px 14px rgba(45,53,39,.12);transition:color .2s ease" hover="color:#2E3627">↺ Reset gate</Box>
       )}
     </div>
   );

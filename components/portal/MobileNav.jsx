@@ -22,12 +22,7 @@ export default function MobileNav() {
           <span style={{ font: "500 6.5px 'Space Mono',monospace", letterSpacing: '.1em', color: 'rgba(255,255,255,.75)', border: '1px solid rgba(255,255,255,.5)', padding: '2px 4px', borderRadius: 3 }}>RUO</span>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
-          {v.isAdmin && (
-            <div style={{ display: 'flex', background: 'rgba(255,255,255,.14)', border: '1px solid rgba(255,255,255,.18)', borderRadius: 999, padding: 2 }}>
-              <span onClick={v.setCustomer} style={{ font: "600 9.5px 'Manrope',sans-serif", padding: '5px 10px', borderRadius: 999, cursor: 'pointer', background: customer ? '#FFDFE0' : 'transparent', color: customer ? '#2E3627' : 'rgba(255,255,255,.75)' }}>Customer</span>
-              <span onClick={v.setAdmin} style={{ font: "600 9.5px 'Manrope',sans-serif", padding: '5px 10px', borderRadius: 999, cursor: 'pointer', background: customer ? 'transparent' : '#FFDFE0', color: customer ? 'rgba(255,255,255,.75)' : '#2E3627' }}>Admin</span>
-            </div>
-          )}
+          {/* No Customer/Admin toggle — the dashboard is role-locked. */}
           {customer && (
             <span onClick={v.openCart} style={{ position: 'relative', display: 'grid', placeItems: 'center', width: 34, height: 34, cursor: 'pointer' }}>
               <Cart s={17} c="#FFFFFF" w={1.7} />
@@ -55,6 +50,7 @@ export default function MobileNav() {
           <>
             <Box as="span" onClick={v.goAdmOrders} style={v.mtabAdmOrders}>Orders</Box>
             <Box as="span" onClick={v.goAdmInventory} style={v.mtabAdmInventory}>Inventory</Box>
+            <Box as="span" onClick={v.goAccount} style={v.mtabAccount}>Account</Box>
           </>
         )}
       </div>
@@ -64,13 +60,20 @@ export default function MobileNav() {
         <>
           <div onClick={v.closeDashNav} style={{ position: 'fixed', inset: 0, zIndex: 80, background: 'rgba(45,53,39,.4)', animation: 'ngMenuFade .25s ease' }} />
           <div style={{ position: 'fixed', top: 68, left: 14, right: 14, zIndex: 81, borderRadius: 16, background: '#FFDFE0', boxShadow: '0 24px 54px rgba(45,53,39,.35)', overflow: 'hidden', animation: 'ngMenuSheet .28s cubic-bezier(.2,.9,.3,1)' }}>
-            <div style={{ font: "500 8.5px 'Space Mono',monospace", letterSpacing: '.2em', textTransform: 'uppercase', color: '#5A6B4B', padding: '16px 22px 6px' }}>Customer</div>
-            <DrawerRow label="Catalog" onClick={v.drawerCustCatalog} />
-            <DrawerRow label="My orders" onClick={v.drawerCustOrders} />
-            <DrawerRow label="Account" onClick={v.drawerAccount} />
-            <div style={{ font: "500 8.5px 'Space Mono',monospace", letterSpacing: '.2em', textTransform: 'uppercase', color: '#5A6B4B', padding: '14px 22px 6px' }}>Admin</div>
-            <DrawerRow label="Orders" onClick={v.drawerAdmOrders} />
-            <DrawerRow label="Inventory" onClick={v.drawerAdmInventory} />
+            {/* Role-locked drawer: only the current role's destinations. */}
+            {customer ? (
+              <>
+                <DrawerRow label="Catalog" onClick={v.drawerCustCatalog} />
+                <DrawerRow label="My orders" onClick={v.drawerCustOrders} />
+                <DrawerRow label="Account" onClick={v.drawerAccount} />
+              </>
+            ) : (
+              <>
+                <DrawerRow label="Orders" onClick={v.drawerAdmOrders} />
+                <DrawerRow label="Inventory" onClick={v.drawerAdmInventory} />
+                <DrawerRow label="Account" onClick={v.drawerAccount} />
+              </>
+            )}
             <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '14px 22px', background: '#FFF1F1' }}>
               <span style={{ display: 'grid', placeItems: 'center', width: 30, height: 30, borderRadius: '50%', background: '#FFDFE0', color: '#B96F74', font: "700 12px 'Manrope',sans-serif" }}>{v.authInitial}</span>
               <div style={{ flex: 1, minWidth: 0 }}>
